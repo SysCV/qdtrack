@@ -1,8 +1,10 @@
 # Quasi-Dense Instance Similarity Learning
 
+This is the offical implementation of paper [Quasi-Dense Instance Similarity learning](https://arxiv.org/pdf/2006.06664.pdf).
 
 We present a [trailer](https://youtu.be/o8HRJAOZidc) that consists of method illustrations and tracking visualizations. Take a look!
 
+If you have any questions or discussions, feel free to contact Jiangmiao Pang ([pangjiangmiao@gmail.com](mailto:pangjiangmiao@gmail.com)).
 
 ## Abstract
 
@@ -13,48 +15,32 @@ Similarity metrics for instances have drawn much attention, due to their importa
 ## Quasi-dense matching
 ![teaser](figures/teaser.png)
 
+## Main results
+With out bells and whistles, our method outperforms the states of the art on BDD100K and Waymo Tracking datasets by a large margin.
+
+### Joint object detection and tracking on BDD100K test set
+
+| mMOTA | mIDF1  | ID Sw. |
+|-------|--------|--------|
+| 35.2  | 51.8   |  11019 |
+
+### Joint object detection and tracking on Waymo validation set
+
+| Category   | MOTA | IDF1 | ID Sw. |
+|------------|------|------|--------|
+| Vehicle    | 55.6 | 66.2 | 24309  | 
+| Pedestrian | 50.3 | 58.4 | 6347   |
+| Cyclist    | 26.2 | 45.7 | 56     | 
+| All        | 44.0 | 56.8 | 30712  | 
+
 
 ## Installation
 
-### Requirements
+Please refer to [INSTALL.md](docs/INSTALL.md) for installation instructions.
 
-- Linux
-- Python 3.6+ 
-- PyTorch 1.3+
-- CUDA 9.2+ (If you build PyTorch from source, CUDA 9.0 is also compatible)
-- NCCL 2+
-- GCC 5+
-- [mmcv](https://github.com/open-mmlab/mmcv)
-- [mmdet](https://github.com/open-mmlab/mmdetection)
 
-### Install 
-
-a. Create a conda virtual environment and activate it.
-```shell
-
-conda create -n qdtrack python=3.7 -y
-conda activate qdtrack
-```
-
-b. Install mmcv and mmdetection, see [offical instructions](https://github.com/open-mmlab/mmdetection/blob/master/docs/install.md).
-
-```shell
-pip install mmcv-full
-
-# Please find another path to compile mmdetection
-git clone https://github.com/open-mmlab/mmdetection.git
-cd mmdetection
-python setup.py develop
-```
-
-c. Install qdtrack
-```shell
-python setup.py develop
-```
-
-### Run QDTrack
-The config files are in the folder `configs`.
-The running instruction follows [here](https://github.com/open-mmlab/mmdetection/blob/master/docs/getting_started.md).
+## Usages
+Please refer to [GET_STARTED.md](docs/GET_STARTED.md) for dataset preparation and running instructions.
 
 
 

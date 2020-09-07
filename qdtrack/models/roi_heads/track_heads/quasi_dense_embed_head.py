@@ -7,7 +7,7 @@ from mmdet.models import HEADS, build_loss
 from qdtrack.core import cal_similarity
 
 
-@HEADS.register_module
+@HEADS.register_module()
 class QuasiDenseEmbedHead(nn.Module):
 
     def __init__(self,
