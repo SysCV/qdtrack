@@ -1,7 +1,7 @@
 from mmdet.core import bbox2result
 from mmdet.models import TwoStageDetector
 
-from mmtrack.core import track2result
+from qdtrack.core import track2result
 from ..builder import MODELS, build_tracker
 
 
