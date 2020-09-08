@@ -4,20 +4,20 @@ from functools import partial
 import numpy as np
 from mmcv.parallel import collate
 from mmcv.runner import get_dist_info
-from mmdet.datasets.samplers import GroupSampler
+from mmdet.datasets.samplers import DistributedGroupSampler, GroupSampler
 from torch.utils.data import DataLoader
 
 from .samplers import DistributedVideoSampler
 
 
-def build_video_dataloader(dataset,
-                           samples_per_gpu,
-                           workers_per_gpu,
-                           num_gpus=1,
-                           dist=True,
-                           shuffle=False,
-                           seed=None,
-                           **kwargs):
+def build_dataloader(dataset,
+                     samples_per_gpu,
+                     workers_per_gpu,
+                     num_gpus=1,
+                     dist=True,
+                     shuffle=True,
+                     seed=None,
+                     **kwargs):
     """Build PyTorch DataLoader.
 
     In distributed training, each GPU/process has a dataloader.
@@ -38,12 +38,14 @@ def build_video_dataloader(dataset,
     Returns:
         DataLoader: A PyTorch dataloader.
     """
-    if shuffle:
-        raise ValueError('This dataloader is specifically for video testing.')
     rank, world_size = get_dist_info()
     if dist:
-        sampler = DistributedVideoSampler(
-            dataset, world_size, rank, shuffle=False)
+        if shuffle:
+            sampler = DistributedGroupSampler(dataset, samples_per_gpu,
+                                              world_size, rank)
+        else:
+            sampler = DistributedVideoSampler(
+                dataset, world_size, rank, shuffle=False)
         batch_size = samples_per_gpu
         num_workers = workers_per_gpu
     else:

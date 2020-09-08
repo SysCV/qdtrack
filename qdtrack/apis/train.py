@@ -3,11 +3,12 @@ from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (HOOKS, DistSamplerSeedHook, EpochBasedRunner,
                          OptimizerHook, build_optimizer)
 from mmcv.utils import build_from_cfg
-from mmdet.core import DistEvalHook, EvalHook, Fp16OptimizerHook
-from mmdet.datasets import build_dataloader, build_dataset
-from mmdet.utils import get_root_logger
+from mmdet.core import Fp16OptimizerHook
+from mmdet.datasets import build_dataset
 
-from qdtrack.datasets import build_video_dataloader
+from qdtrack.core import DistEvalHook, EvalHook
+from qdtrack.datasets import build_dataloader
+from qdtrack.utils import get_root_logger
 
 
 def train_model(model,
@@ -91,7 +92,7 @@ def train_model(model,
     # register eval hooks
     if validate:
         val_dataset = build_dataset(cfg.data.val, dict(test_mode=True))
-        val_dataloader = build_video_dataloader(
+        val_dataloader = build_dataloader(
             val_dataset,
             samples_per_gpu=1,
             workers_per_gpu=cfg.data.workers_per_gpu,

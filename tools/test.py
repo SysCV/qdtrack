@@ -10,10 +10,6 @@ from mmcv.runner import get_dist_info, init_dist, load_checkpoint
 from mmdet.core import wrap_fp16_model
 from mmdet.datasets import build_dataset
 
-from qdtrack.apis import multi_gpu_test, single_gpu_test
-from qdtrack.datasets import build_video_dataloader
-from qdtrack.models import build_model
-
 
 def parse_args():
     parser = argparse.ArgumentParser(description='qdtrack test model')
@@ -83,6 +79,14 @@ def main():
         raise ValueError('The output file must be a pkl file.')
 
     cfg = Config.fromfile(args.config)
+    if cfg.get('USE_MMDET', False):
+        from mmdet.apis import multi_gpu_test, single_gpu_test
+        from mmdet.models import build_detector as build_model
+        from mmdet.datasets import build_dataloader
+    else:
+        from qdtrack.apis import multi_gpu_test, single_gpu_test
+        from qdtrack.models import build_model
+        from qdtrack.datasets import build_dataloader
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
     # set cudnn_benchmark
@@ -99,9 +103,8 @@ def main():
         init_dist(args.launcher, **cfg.dist_params)
 
     # build the dataloader
-    # TODO: support multiple images per gpu (only minor changes are needed)
     dataset = build_dataset(cfg.data.test)
-    data_loader = build_video_dataloader(
+    data_loader = build_dataloader(
         dataset,
         samples_per_gpu=1,
         workers_per_gpu=cfg.data.workers_per_gpu,
@@ -115,13 +118,13 @@ def main():
         wrap_fp16_model(model)
     checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
 
+    if args.fuse_conv_bn:
+        model = fuse_conv_bn(model)
+
     if 'CLASSES' in checkpoint['meta']:
         model.CLASSES = checkpoint['meta']['CLASSES']
     else:
         model.CLASSES = dataset.CLASSES
-
-    if args.fuse_conv_bn:
-        model = fuse_conv_bn(model)
 
     if not distributed:
         model = MMDataParallel(model, device_ids=[0])
