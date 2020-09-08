@@ -31,7 +31,7 @@ You can check the supported CUDA version for precompiled packages on the [PyTorc
 c. Install mmcv and mmdetection.
 
 ```shell
-pip install mmcv-full==latest+torch1.5.0+cu101 -f http://download.openmmlab.com/mmcv/dist/index.html
+pip install mmcv-full
 
 # Please find an another path to install mmdetection
 git clone https://github.com/open-mmlab/mmdetection.git
