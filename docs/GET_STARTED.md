@@ -1,20 +1,24 @@
 # Getting Started
-This page provides basic tutorials about the usage of QDTrack. For installation instructions, please see [INSTALL.md.](INSTALL.md)
+This page provides basic tutorials about the usage of QDTrack. For installation instructions, please see [INSTALL.md](INSTALL.md).
 
 ## Prepare Datasets
 
-### a. Prepare annotations
+We present an example based on [BDD100K](https://bdd-data.berkeley.edu/) dataset. Please first download the images and annotations from the [official website](https://bdd-data.berkeley.edu/#download-section). We use both `detection` set and `tracking` set for training and validate the tracking performance on `tracking` set.
 
-We implement a [dataset API](../qdtrack/datasets/parsers/coco_video_parser.py) similiar to COCO-style to organize the annotations.
 
-For BDD dataset, we provide [scripts](../tools/convert_datasets) to convert the offical annotations to CocoVID format. 
 
-We support joint training with both detection set and tracking set from BDD100K dataset.
+To organize the annotations for training and inference, we implement a [dataset API](../qdtrack/datasets/parsers/coco_video_parser.py) that is similiar to COCO-style.
 
-### b. Prepare Images
+After downloaded the annotations, please transform the offical annotation files to CocoVID style with the provided [scripts](../tools/convert_datasets).
+
+```shell
+python tools/convert_datasets/bdddet2coco.py -i ${input_dir} -o ${output_dir}
+python tools/convert_datasets/bddtrack2cocovid.py -i ${input_dir} -o ${output_dir}
+```
 
 It is recommended to symlink the dataset root to `$QDTrack/data`.
 If your folder structure is different, you may need to change the corresponding paths in config files.
+Our folder structure follows
 
 ```
 ├── qdtrack

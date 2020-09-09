@@ -3,8 +3,8 @@ import random
 import mmcv
 import numpy as np
 from mmdet.datasets import DATASETS, CocoDataset
-from mmtrack.core import eval_mot
 
+from qdtrack.core import eval_mot
 from .parsers import CocoVID
 
 
@@ -81,13 +81,17 @@ class CocoVideoDataset(CocoDataset):
             ref_img_info['filename'] = ref_img_info['file_name']
         return ref_img_info
 
+    def _pre_pipeline(self, _results):
+        super().pre_pipeline(_results)
+        _results['frame_id'] = _results['img_info'].get('frame_id', -1)
+
     def pre_pipeline(self, results):
         """Prepare results dict for pipeline."""
         if isinstance(results, list):
             for _results in results:
-                super().pre_pipeline(_results)
+                self._pre_pipeline(_results)
         elif isinstance(results, dict):
-            super().pre_pipeline(results)
+            self._pre_pipeline(results)
         else:
             raise TypeError('input must be a list or a dict')
 
