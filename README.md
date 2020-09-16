@@ -24,6 +24,8 @@ With out bells and whistles, our method outperforms the states of the art on BDD
 |-------|--------|--------|
 | 35.2  | 51.8   |  11019 |
 
+
+
 ### Joint object detection and tracking on Waymo validation set
 
 | Category   | MOTA | IDF1 | ID Sw. |
@@ -42,6 +44,9 @@ Please refer to [INSTALL.md](docs/INSTALL.md) for installation instructions.
 ## Usages
 Please refer to [GET_STARTED.md](docs/GET_STARTED.md) for dataset preparation and running instructions.
 
+We propose [pretrained models](https://drive.google.com/file/d/1YNAQgd8rMqqEG-fRj3VWlO4G5kdwJbxz/view?usp=sharing) on BDD100K dataset as reference.
+
+More models will be released later.
 
 
 ## Citation 
