@@ -87,7 +87,8 @@ class QuasiDenseFasterRCNN(TwoStageDetector):
                                   self.roi_head.bbox_head.num_classes)
 
         if track_feats is not None:
-            track_result = track2result(bboxes, labels, ids)
+            track_result = track2result(bboxes, labels, ids,
+                                        self.roi_head.bbox_head.num_classes)
         else:
             from collections import defaultdict
             track_result = defaultdict(list)
