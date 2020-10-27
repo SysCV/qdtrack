@@ -11,7 +11,7 @@ from mmcv.image import imread, imwrite
 from mmcv.visualization import color_val, imshow
 from mmdet.core import bbox_overlaps
 
-from mmtrack.core import embed_similarity
+from mmtrack.core import cal_similarity
 from ..builder import TRACKERS
 
 
@@ -155,7 +155,7 @@ class TaoTracker(object):
             memo_bboxes, memo_labels, memo_embeds, memo_ids = self.memo
 
             if self.match_metric == 'bisoftmax':
-                sims = embed_similarity(
+                sims = cal_similarity(
                     embeds,
                     memo_embeds,
                     method='dot_product',
@@ -165,14 +165,14 @@ class TaoTracker(object):
                 exps = torch.exp(sims) * cat_same
                 d2t_scores = exps / (exps.sum(dim=1).view(-1, 1) + 1e-6)
                 t2d_scores = exps / (exps.sum(dim=0).view(1, -1) + 1e-6)
-                cos_scores = embed_similarity(
+                cos_scores = cal_similarity(
                     embeds, memo_embeds, method='cosine', transpose=True)
                 cos_scores *= cat_same
                 scores = (d2t_scores + t2d_scores) / 2
                 if self.match_with_cosine:
                     scores = (scores + cos_scores) / 2
             elif self.match_metric == 'cosine':
-                cos_scores = embed_similarity(
+                cos_scores = cal_similarity(
                     embeds, memo_embeds, method='cosine', transpose=True)
                 cat_same = labels.view(-1, 1) == memo_labels.view(1, -1)
                 scores = cos_scores * cat_same.float()
