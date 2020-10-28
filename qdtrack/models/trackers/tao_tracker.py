@@ -11,7 +11,7 @@ from mmcv.image import imread, imwrite
 from mmcv.visualization import color_val, imshow
 from mmdet.core import bbox_overlaps
 
-from mmtrack.core import cal_similarity
+from qdtrack.core import cal_similarity
 from ..builder import TRACKERS
 
 

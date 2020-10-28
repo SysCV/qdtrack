@@ -8,10 +8,27 @@ from ..builder import MODELS, build_tracker
 @MODELS.register_module()
 class QuasiDenseFasterRCNN(TwoStageDetector):
 
-    def __init__(self, tracker=None, *args, **kwargs):
+    def __init__(self, tracker=None, freeze_detector=False, *args, **kwargs):
         self.prepare_cfg(kwargs)
         super().__init__(*args, **kwargs)
         self.tracker_cfg = tracker
+        self.freeze_detector = freeze_detector
+        if self.freeze_detector:
+            self._freeze_detector()
+
+    def _freeze_detector(self):
+        self.backbone.eval()
+        self.neck.eval()
+        self.rpn_head.eval()
+        self.roi_head.bbox_head.eval()
+        for param in self.backbone.parameters():
+            param.requires_grad = False
+        for param in self.neck.parameters():
+            param.requires_grad = False
+        for param in self.rpn_head.parameters():
+            param.requires_grad = False
+        for param in self.roi_head.bbox_head.parameters():
+            param.requires_grad = False
 
     def prepare_cfg(self, kwargs):
         if kwargs.get('train_cfg', False):
@@ -80,7 +97,7 @@ class QuasiDenseFasterRCNN(TwoStageDetector):
             bboxes, labels, ids = self.tracker.match(
                 bboxes=det_bboxes,
                 labels=det_labels,
-                track_feats=track_feats,
+                embeds=track_feats,
                 frame_id=frame_id)
 
         bbox_result = bbox2result(det_bboxes, det_labels,
@@ -92,4 +109,4 @@ class QuasiDenseFasterRCNN(TwoStageDetector):
         else:
             from collections import defaultdict
             track_result = defaultdict(list)
-        return dict(bbox_result=bbox_result, track_result=track_result)
+        return dict(bbox_results=bbox_result, track_results=track_result)
