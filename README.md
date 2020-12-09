@@ -1,4 +1,4 @@
-# Quasi-Dense Similarity Learning for Multiple Object Tracking
+# Quasi-Dense Tracking
 
 This is the offical implementation of paper [Quasi-Dense Similarity Learning for Multiple Object Tracking](https://arxiv.org/pdf/2006.06664.pdf).
 
