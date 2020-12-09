@@ -52,9 +52,9 @@ More models will be released later.
 ## Citation 
 
 ```
-@article{pang2020quasi,
-  title={Quasi-Dense Instance Similarity Learning},
-  author={Pang, Jiangmiao and Qiu, Linlu and Chen, Haofeng and Li, Qi and Darrell, Trevor and Yu, Fisher},
+@article{qdtrack,
+  title={Quasi-Dense Similarity Learning for Multiple Object Tracking},
+  author={Pang, Jiangmiao and Qiu, Linlu and Li, Xia and Chen, Haofeng and Li, Qi and Darrell, Trevor and Yu, Fisher},
   journal={arXiv preprint arXiv:2006.06664},
   year={2020}
 }
