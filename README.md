@@ -15,17 +15,23 @@ Similarity learning has been recognized as a crucial step for object tracking. H
 <img src="figures/teaser.png" width="600">
 
 ## Main results
-With out bells and whistles, our method outperforms the states of the art on BDD100K and Waymo Tracking datasets by a large margin.
+Without bells and whistles, our method outperforms the states of the art on MOT, BDD100K, Waymo, and TAO benchmarks.
 
-### Joint object detection and tracking on BDD100K test set
+
+### BDD100K test set
 
 | mMOTA | mIDF1  | ID Sw. |
 |-------|--------|--------|
-| 35.2  | 51.8   |  11019 |
+| 35.5  | 52.3   |  10790 |
 
+### MOT
 
+| Dataset | MOTA | IDF1  | ID Sw. | MT | ML |
+|-------|--------|--------| ----| ---| ---|
+| MOT16 | 69.8 | 67.1 | 1097 | 316 | 150 |
+| MOT17 | 68.7 | 66.3 | 3378 | 957 | 516 |
 
-### Joint object detection and tracking on Waymo validation set
+### Waymo validation set
 
 | Category   | MOTA | IDF1 | ID Sw. |
 |------------|------|------|--------|
@@ -33,6 +39,13 @@ With out bells and whistles, our method outperforms the states of the art on BDD
 | Pedestrian | 50.3 | 58.4 | 6347   |
 | Cyclist    | 26.2 | 45.7 | 56     | 
 | All        | 44.0 | 56.8 | 30712  | 
+
+### TAO
+
+| Split   | AP50 | AP75 | AP | 
+|---------|------|------|----|
+| val     | 16.1 | 5.0  | 7.0|
+| test    | 12.4 | 4.5  | 5.2|
 
 
 ## Installation
@@ -43,9 +56,13 @@ Please refer to [INSTALL.md](docs/INSTALL.md) for installation instructions.
 ## Usages
 Please refer to [GET_STARTED.md](docs/GET_STARTED.md) for dataset preparation and running instructions.
 
-We propose [pretrained models](https://drive.google.com/file/d/1YNAQgd8rMqqEG-fRj3VWlO4G5kdwJbxz/view?usp=sharing) on BDD100K dataset as reference.
+We release [pretrained models](https://drive.google.com/file/d/1YNAQgd8rMqqEG-fRj3VWlO4G5kdwJbxz/view?usp=sharing) on BDD100K dataset for testing.
 
-More models will be released later.
+More implementations / models on the following benchmarks will be released later:
+
+- Waymo
+- MOT16 / MOT17 / MOT20
+- TAO
 
 
 ## Citation 
