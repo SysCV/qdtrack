@@ -11,9 +11,8 @@ If you have any questions, please go to [Discussions](https://github.com/SysCV/q
 Similarity learning has been recognized as a crucial step for object tracking. However, existing multiple object tracking methods only use sparse ground truth matching as the training objective, while ignoring the majority of the informative regions on the images. In this paper, we present Quasi-Dense Similarity Learning, which densely samples hundreds of region proposals on a pair of images for contrastive learning. We can naturally combine this similarity learning with existing detection methods to build Quasi-Dense Tracking (QDTrack) without turning to displacement regression or motion priors. We also find that the resulting distinctive feature space admits a simple nearest neighbor search at the inference time. Despite its simplicity, QDTrack outperforms all existing methods on MOT, BDD100K, Waymo, and TAO tracking benchmarks. It achieves 68.7 MOTA at 20.3 FPS on MOT17 without using external training data. Compared to methods with similar detectors, it boosts almost 10 points of MOTA and significantly decreases the number of ID switches on BDD100K and Waymo datasets. 
 
 
-
 ## Quasi-dense matching
-![teaser](figures/teaser.png)
+<img src="figures/teaser.png" width="600">
 
 ## Main results
 With out bells and whistles, our method outperforms the states of the art on BDD100K and Waymo Tracking datasets by a large margin.
