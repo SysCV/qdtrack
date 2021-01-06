@@ -3,18 +3,38 @@ This page provides basic tutorials about the usage of QDTrack. For installation 
 
 ## Prepare Datasets
 
-We present an example based on [BDD100K](https://bdd-data.berkeley.edu/) dataset. Please first download the images and annotations from the [official website](https://bdd-data.berkeley.edu/#download-section). We use both `detection` set and `tracking` set for training and validate the tracking performance on `tracking` set.
+#### Download BDD100K
+We present an example based on [BDD100K](https://bdd100k.com/) dataset. Please first download the images and annotations from the [official website](https://bdd-data.berkeley.edu/). We use both `detection` set and `tracking` set for training and validate the method on `tracking` set.
+For more details about the dataset, please refer to the [offial documentation](https://doc.bdd100k.com/download.html).
 
+On the offical download page, the required data and annotations are
 
+- `detection` set images: `Images` 
+- `detection` set annotations: `Detection 2020 Labels`
+- `tracking` set images: `MOT 2020 Data`
+- `tracking` set annotations: `MOT 2020 Labels`
+
+#### Convert annotations
 
 To organize the annotations for training and inference, we implement a [dataset API](../qdtrack/datasets/parsers/coco_video_parser.py) that is similiar to COCO-style.
 
 After downloaded the annotations, please transform the offical annotation files to CocoVID style with the provided [scripts](../tools/convert_datasets).
 
-```shell
-python tools/convert_datasets/bdddet2coco.py -i ${input_dir} -o ${output_dir}
-python tools/convert_datasets/bddtrack2cocovid.py -i ${input_dir} -o ${output_dir}
+First, uncompress the downloaded annotation file and you will obtain a folder named `bdd100k`.
+
+To convert the detection set, you can do as 
+```python
+python tools/convert_datasets/bdddet2coco.py -i bdd100k/labels/detection20 -o ${OUT_PATH}/detection/annotations
 ```
+
+To convert the detection set, you can do as 
+```python
+python tools/convert_datasets/bddtrack2coco.py -i bdd100k/labels-20/box-track -o ${OUT_PATH}/tracking/annotations
+```
+
+The `${OUT_PATH}` here indicates the output path on your machine.
+
+#### Symlink the data
 
 It is recommended to symlink the dataset root to `$QDTrack/data`.
 If your folder structure is different, you may need to change the corresponding paths in config files.

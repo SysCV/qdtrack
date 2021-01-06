@@ -1,4 +1,5 @@
 import argparse
+import os
 import os.path as osp
 from collections import defaultdict
 
@@ -24,6 +25,9 @@ def parse_args():
 
 def main():
     args = parse_args()
+
+    if not os.path.exists(args.output):
+        os.makedirs(args.output)
 
     for subset in ['train', 'val']:
         print(f'convert BDD100K detection {subset} set into coco format')
