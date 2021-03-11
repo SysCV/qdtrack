@@ -80,6 +80,10 @@ def main():
         raise ValueError('The output file must be a pkl file.')
 
     cfg = Config.fromfile(args.config)
+
+    if args.cfg_options is not None:
+        cfg.merge_from_dict(args.cfg_options)
+
     if cfg.get('USE_MMDET', False):
         from mmdet.apis import multi_gpu_test, single_gpu_test
         from mmdet.models import build_detector as build_model
@@ -88,8 +92,7 @@ def main():
         from qdtrack.apis import multi_gpu_test, single_gpu_test
         from qdtrack.models import build_model
         from qdtrack.datasets import build_dataloader
-    if args.cfg_options is not None:
-        cfg.merge_from_dict(args.cfg_options)
+
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
