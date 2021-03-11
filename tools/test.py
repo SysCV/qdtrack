@@ -7,7 +7,7 @@ from mmcv import Config, DictAction
 from mmcv.cnn import fuse_conv_bn
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import get_dist_info, init_dist, load_checkpoint
-from mmdet.core import wrap_fp16_model
+# from mmdet.core import wrap_fp16_model
 from mmdet.datasets import build_dataset
 
 
@@ -39,6 +39,7 @@ def parse_args():
         '--tmpdir',
         help='tmp directory used for collecting results from multiple '
         'workers, available when gpu-collect is not specified')
+    parser.add_argument('--show_score_thr', default=0.3, type=float, help='output result file')
     parser.add_argument(
         '--cfg-options',
         nargs='+',
@@ -113,9 +114,9 @@ def main():
 
     # build the model and load checkpoint
     model = build_model(cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
-    fp16_cfg = cfg.get('fp16', None)
-    if fp16_cfg is not None:
-        wrap_fp16_model(model)
+    # fp16_cfg = cfg.get('fp16', None)
+    # if fp16_cfg is not None:
+    #     wrap_fp16_model(model)
     checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
 
     if args.fuse_conv_bn:
