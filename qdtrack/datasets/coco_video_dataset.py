@@ -203,7 +203,8 @@ class CocoVideoDataset(CocoDataset):
                 gt_labels.append(self.cat2label[ann['category_id']])
                 if ann.get('segmentation', False):
                     gt_masks_ann.append(ann['segmentation'])
-                if ann.get('instance_id', False):
+                instance_id = ann.get('instance_id', None)
+                if instance_id is not None:
                     gt_instance_ids.append(ann['instance_id'])
 
         if gt_bboxes:
