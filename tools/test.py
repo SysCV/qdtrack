@@ -7,7 +7,7 @@ from mmcv import Config, DictAction
 from mmcv.cnn import fuse_conv_bn
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import get_dist_info, init_dist, load_checkpoint
-from mmdet.core import wrap_fp16_model
+# from mmdet.core import wrap_fp16_model
 from mmdet.datasets import build_dataset
 
 
@@ -39,6 +39,7 @@ def parse_args():
         '--tmpdir',
         help='tmp directory used for collecting results from multiple '
         'workers, available when gpu-collect is not specified')
+    parser.add_argument('--show_score_thr', default=0.3, type=float, help='output result file')
     parser.add_argument(
         '--cfg-options',
         nargs='+',
@@ -79,6 +80,10 @@ def main():
         raise ValueError('The output file must be a pkl file.')
 
     cfg = Config.fromfile(args.config)
+
+    if args.cfg_options is not None:
+        cfg.merge_from_dict(args.cfg_options)
+
     if cfg.get('USE_MMDET', False):
         from mmdet.apis import multi_gpu_test, single_gpu_test
         from mmdet.models import build_detector as build_model
@@ -87,8 +92,7 @@ def main():
         from qdtrack.apis import multi_gpu_test, single_gpu_test
         from qdtrack.models import build_model
         from qdtrack.datasets import build_dataloader
-    if args.cfg_options is not None:
-        cfg.merge_from_dict(args.cfg_options)
+
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
@@ -113,9 +117,9 @@ def main():
 
     # build the model and load checkpoint
     model = build_model(cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
-    fp16_cfg = cfg.get('fp16', None)
-    if fp16_cfg is not None:
-        wrap_fp16_model(model)
+    # fp16_cfg = cfg.get('fp16', None)
+    # if fp16_cfg is not None:
+    #     wrap_fp16_model(model)
     checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
 
     if args.fuse_conv_bn:

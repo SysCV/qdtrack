@@ -66,14 +66,16 @@ def main():
 
     cfg = Config.fromfile(args.config)
 
+    if args.cfg_options is not None:
+        cfg.merge_from_dict(args.cfg_options)
+
     if cfg.get('USE_MMDET', False):
         from mmdet.apis import train_detector as train_model
         from mmdet.models import build_detector as build_model
     else:
         from qdtrack.apis import train_model
         from qdtrack.models import build_model
-    if args.cfg_options is not None:
-        cfg.merge_from_dict(args.cfg_options)
+
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True

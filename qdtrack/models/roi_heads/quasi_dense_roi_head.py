@@ -14,11 +14,11 @@ class QuasiDenseRoIHead(StandardRoIHead):
                  *args,
                  **kwargs):
         super().__init__(*args, **kwargs)
-        assert track_head is not None
-        self.track_train_cfg = track_train_cfg
-        self.init_track_head(track_roi_extractor, track_head)
-        if self.track_train_cfg:
-            self.init_track_assigner_sampler()
+        if track_head is not None:
+            self.track_train_cfg = track_train_cfg
+            self.init_track_head(track_roi_extractor, track_head)
+            if self.track_train_cfg:
+                self.init_track_assigner_sampler()
 
     def init_track_assigner_sampler(self):
         """Initialize assigner and sampler."""
@@ -80,49 +80,49 @@ class QuasiDenseRoIHead(StandardRoIHead):
         losses = super().forward_train(x, img_metas, proposal_list, gt_bboxes,
                                        gt_labels, gt_bboxes_ignore, gt_masks,
                                        *args, **kwargs)
+        if self.with_track:
+            num_imgs = len(img_metas)
+            if gt_bboxes_ignore is None:
+                gt_bboxes_ignore = [None for _ in range(num_imgs)]
+            if ref_gt_bboxes_ignore is None:
+                ref_gt_bboxes_ignore = [None for _ in range(num_imgs)]
+            key_sampling_results, ref_sampling_results = [], []
+            for i in range(num_imgs):
+                assign_result = self.track_roi_assigner.assign(
+                    proposal_list[i], gt_bboxes[i], gt_bboxes_ignore[i],
+                    gt_labels[i])
+                sampling_result = self.track_roi_sampler.sample(
+                    assign_result,
+                    proposal_list[i],
+                    gt_bboxes[i],
+                    gt_labels[i],
+                    feats=[lvl_feat[i][None] for lvl_feat in x])
+                key_sampling_results.append(sampling_result)
 
-        num_imgs = len(img_metas)
-        if gt_bboxes_ignore is None:
-            gt_bboxes_ignore = [None for _ in range(num_imgs)]
-        if ref_gt_bboxes_ignore is None:
-            ref_gt_bboxes_ignore = [None for _ in range(num_imgs)]
-        key_sampling_results, ref_sampling_results = [], []
-        for i in range(num_imgs):
-            assign_result = self.track_roi_assigner.assign(
-                proposal_list[i], gt_bboxes[i], gt_bboxes_ignore[i],
-                gt_labels[i])
-            sampling_result = self.track_roi_sampler.sample(
-                assign_result,
-                proposal_list[i],
-                gt_bboxes[i],
-                gt_labels[i],
-                feats=[lvl_feat[i][None] for lvl_feat in x])
-            key_sampling_results.append(sampling_result)
+                ref_assign_result = self.track_roi_assigner.assign(
+                    ref_proposals[i], ref_gt_bboxes[i], ref_gt_bboxes_ignore[i],
+                    ref_gt_labels[i])
+                ref_sampling_result = self.track_roi_sampler.sample(
+                    ref_assign_result,
+                    ref_proposals[i],
+                    ref_gt_bboxes[i],
+                    ref_gt_labels[i],
+                    feats=[lvl_feat[i][None] for lvl_feat in ref_x])
+                ref_sampling_results.append(ref_sampling_result)
 
-            ref_assign_result = self.track_roi_assigner.assign(
-                ref_proposals[i], ref_gt_bboxes[i], ref_gt_bboxes_ignore[i],
-                ref_gt_labels[i])
-            ref_sampling_result = self.track_roi_sampler.sample(
-                ref_assign_result,
-                ref_proposals[i],
-                ref_gt_bboxes[i],
-                ref_gt_labels[i],
-                feats=[lvl_feat[i][None] for lvl_feat in ref_x])
-            ref_sampling_results.append(ref_sampling_result)
+            key_bboxes = [res.pos_bboxes for res in key_sampling_results]
+            key_feats = self._track_forward(x, key_bboxes)
+            ref_bboxes = [res.bboxes for res in ref_sampling_results]
+            ref_feats = self._track_forward(ref_x, ref_bboxes)
 
-        key_bboxes = [res.pos_bboxes for res in key_sampling_results]
-        key_feats = self._track_forward(x, key_bboxes)
-        ref_bboxes = [res.bboxes for res in ref_sampling_results]
-        ref_feats = self._track_forward(ref_x, ref_bboxes)
+            match_feats = self.track_head.match(key_feats, ref_feats,
+                                                key_sampling_results,
+                                                ref_sampling_results)
+            asso_targets = self.track_head.get_track_targets(
+                gt_match_indices, key_sampling_results, ref_sampling_results)
+            loss_track = self.track_head.loss(*match_feats, *asso_targets)
 
-        match_feats = self.track_head.match(key_feats, ref_feats,
-                                            key_sampling_results,
-                                            ref_sampling_results)
-        asso_targets = self.track_head.get_track_targets(
-            gt_match_indices, key_sampling_results, ref_sampling_results)
-        loss_track = self.track_head.loss(*match_feats, *asso_targets)
-
-        losses.update(loss_track)
+            losses.update(loss_track)
 
         return losses
 
