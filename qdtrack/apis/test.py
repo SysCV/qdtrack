@@ -26,7 +26,30 @@ def single_gpu_test(model,
             results[k].append(v)
 
         if show or out_dir:
-            pass  # TODO
+            img_tensor = data['img'][0]
+            img_metas = data['img_metas'][0].data[0]
+            imgs = tensor2imgs(img_tensor, **img_metas[0]['img_norm_cfg'])
+            assert len(imgs) == len(img_metas)
+
+            for img, img_meta in zip(imgs, img_metas):
+                h, w, _ = img_meta['img_shape']
+                img_show = img[:h, :w, :]
+
+                ori_h, ori_w = img_meta['ori_shape'][:-1]
+                img_show = mmcv.imresize(img_show, (ori_w, ori_h))
+
+                if out_dir:
+                    out_file = osp.join(out_dir, img_meta['ori_filename'])
+                else:
+                    out_file = None
+
+                model.module.show_result(
+                    img_show,
+                    result,
+                    show=show,
+                    out_file=out_file,
+                    score_thr=show_score_thr,
+                    draw_track=True)
 
         batch_size = data['img'][0].size(0)
         for _ in range(batch_size):
