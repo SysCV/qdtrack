@@ -68,10 +68,11 @@ More implementations / models on the following benchmarks will be released later
 ## Citation 
 
 ```
-@article{qdtrack,
-  title={Quasi-Dense Similarity Learning for Multiple Object Tracking},
-  author={Pang, Jiangmiao and Qiu, Linlu and Li, Xia and Chen, Haofeng and Li, Qi and Darrell, Trevor and Yu, Fisher},
-  journal={arXiv preprint arXiv:2006.06664},
-  year={2020}
+@InProceedings{qdtrack,
+  title = {Quasi-Dense Similarity Learning for Multiple Object Tracking},
+  author = {Pang, Jiangmiao and Qiu, Linlu and Li, Xia and Chen, Haofeng and Li, Qi and Darrell, Trevor and Yu, Fisher},
+  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  month = {June},
+  year = {2021}
 }
 ```
