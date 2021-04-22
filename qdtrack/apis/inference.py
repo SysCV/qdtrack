@@ -64,7 +64,6 @@ def inference_model(model, imgs):
         If imgs is a list or tuple, the same length list type results
         will be returned, otherwise return the detection results directly.
     """
-
     if isinstance(imgs, (list, tuple)):
         is_batch = True
     else:
@@ -83,14 +82,14 @@ def inference_model(model, imgs):
     test_pipeline = Compose(cfg.data.test.pipeline)
 
     datas = []
-    for img in imgs:
+    for i, img in enumerate(imgs):
         # prepare data
         if isinstance(img, np.ndarray):
             # directly add img
-            data = dict(img=img)
+            data = dict(img=img, frame_id=i)
         else:
             # add information into dict
-            data = dict(img_info=dict(filename=img), img_prefix=None)
+            data = dict(img_info=dict(filename=img), img_prefix=None, frame_id=i)
         # build the data pipeline
 
         data = test_pipeline(data)
@@ -111,12 +110,9 @@ def inference_model(model, imgs):
 
     # forward the model
     with torch.no_grad():
-        results = model(return_loss=False, rescale=True, detection_only=True, **data)
+        results = model(return_loss=False, rescale=True, **data)
 
-    if not is_batch:
-        return results[0]
-    else:
-        return results
+    return results
 
 
 def show_result_pyplot(model,
