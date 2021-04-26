@@ -39,7 +39,11 @@ def parse_args():
         '--tmpdir',
         help='tmp directory used for collecting results from multiple '
         'workers, available when gpu-collect is not specified')
-    parser.add_argument('--show_score_thr', default=0.3, type=float, help='output result file')
+    parser.add_argument(
+        '--show_score_thr',
+        default=0.3,
+        type=float,
+        help='output result file')
     parser.add_argument(
         '--cfg-options',
         nargs='+',
@@ -116,7 +120,7 @@ def main():
         shuffle=False)
 
     # build the model and load checkpoint
-    model = build_model(cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
+    model = build_model(cfg.model, train_cfg=None, test_cfg=cfg.model.test_cfg)
     # fp16_cfg = cfg.get('fp16', None)
     # if fp16_cfg is not None:
     #     wrap_fp16_model(model)

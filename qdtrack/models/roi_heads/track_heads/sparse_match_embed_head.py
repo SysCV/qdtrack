@@ -22,7 +22,10 @@ class SparseMatchEmbedHead(QuasiDenseEmbedHead):
             weights.append(_weights)
         return targets, weights
 
-    def match(self, key_embeds, ref_embeds):
+    def match(self, key_embeds, ref_embeds, num_key_bboxes, num_ref_bboxes):
+        key_embeds = torch.split(key_embeds, num_key_bboxes)
+        ref_embeds = torch.split(ref_embeds, num_ref_bboxes)
+
         dists, cos_dists = [], []
         for key_embed, ref_embed in zip(key_embeds, ref_embeds):
             dist = cal_similarity(

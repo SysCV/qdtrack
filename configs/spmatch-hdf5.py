@@ -33,7 +33,7 @@ model = dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
         loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
     roi_head=dict(
-        type='QuasiDenseRoIHead',
+        type='SparseMatchRoIHead',
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
@@ -59,7 +59,7 @@ model = dict(
             out_channels=256,
             featmap_strides=[4, 8, 16, 32]),
         track_head=dict(
-            type='QuasiDenseEmbedHead',
+            type='SparseMatchEmbedHead',
             num_convs=4,
             num_fcs=1,
             embed_channels=256,

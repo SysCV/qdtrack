@@ -140,7 +140,7 @@ class QuasiDenseRoIHead(StandardRoIHead):
 
         # TODO: support batch inference
         det_bboxes = det_bboxes[0]
-        det_labels = det_labels[0]
+        det_labels = det_labels[0].to(det_bboxes.device)
 
         if det_bboxes.size(0) == 0:
             return det_bboxes, det_labels, None
