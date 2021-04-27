@@ -202,8 +202,8 @@ data = dict(
         dict(
             type=dataset_type,
             ann_file=data_root +
-            'tracking/annotations/bdd100k_track_train_cocoformat.json',
-            img_prefix=data_root + 'tracking/images/train/',
+            'labels/box_track_20/box_track_train_cocofmt.json',
+            img_prefix=data_root + 'images/track/train/',
             key_img_sampler=dict(interval=1),
             ref_img_sampler=dict(num_ref_imgs=1, scope=3, method='uniform'),
             pipeline=train_pipeline),
@@ -211,21 +211,21 @@ data = dict(
             type=dataset_type,
             load_as_video=False,
             ann_file=data_root +
-            'detection/annotations/bdd100k_det_train_cocoformat.json',
-            img_prefix=data_root + 'detection/images/train/',
+            'labels/det_20/det_train_cocofmt.json',
+            img_prefix=data_root + 'images/100k/train/',
             pipeline=train_pipeline)
     ],
     val=dict(
         type=dataset_type,
         ann_file=data_root +
-        'tracking/annotations/bdd100k_track_val_cocoformat.json',
-        img_prefix=data_root + 'tracking/images/val/',
+        'labels/box_track_20/box_track_val_cocofmt.json',
+        img_prefix=data_root + 'images/track/val/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         ann_file=data_root +
-        'tracking/annotations/bdd100k_track_val_cocoformat.json',
-        img_prefix=data_root + 'tracking/images/val/',
+        'labels/box_track_20/box_track_val_cocofmt.json',
+        img_prefix=data_root + 'images/track/val/',
         pipeline=test_pipeline))
 # optimizer
 optimizer = dict(type='SGD', lr=0.04, momentum=0.9, weight_decay=0.0001)

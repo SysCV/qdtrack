@@ -23,16 +23,18 @@ After downloaded the annotations, please transform the offical annotation files 
 First, uncompress the downloaded annotation file and you will obtain a folder named `bdd100k`.
 
 To convert the detection set, you can do as 
-```python
-python tools/convert_datasets/bdddet2coco.py -i bdd100k/labels/detection20 -o ${OUT_PATH}/detection/annotations
+```bash
+mkdir data/bdd/labels/det_20
+python tools/convert_datasets/bdd2coco.py -m det -l bdd100k/labels/det_20/det_${SET_NAME}.json -o data/bdd/labels/det_20/det_${SET_NAME}_cocofmt.json
 ```
 
-To convert the detection set, you can do as 
-```python
-python tools/convert_datasets/bddtrack2coco.py -i bdd100k/labels-20/box-track -o ${OUT_PATH}/tracking/annotations
+To convert the tracking set, you can do as 
+```bash
+mkdir data/bdd/labels/box_track_20
+python tools/convert_datasets/bdd2coco.py -m box_track -l bdd100k/labels/box_track_20/${SET_NAME} -o data/bdd/labels/box_track_20/box_track_${SET_NAME}_cocofmt.json
 ```
 
-The `${OUT_PATH}` here indicates the output path on your machine.
+The `${SET_NAME}` here can be one of ['train', 'val', 'test].
 
 #### Symlink the data
 
@@ -46,12 +48,16 @@ Our folder structure follows
 ├── configs
 ├── data
 │   ├── bdd
-│   │   ├── detection
-│   │   │   ├── images
-│   │   │   ├── annotations
-│   │   ├── tracking
-│   │   │   ├── images
-│   │   │   ├── annotations
+│   │   ├── images 
+│   │   │   ├── 100k 
+|   |   |   |   |── train
+|   |   |   |   |── val
+│   │   │   ├── track 
+|   |   |   |   |── train
+|   |   |   |   |── val
+│   │   ├── labels 
+│   │   │   ├── box_track_20
+│   │   │   ├── det_20
 
 ```
 
