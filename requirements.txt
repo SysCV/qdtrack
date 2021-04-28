@@ -2,7 +2,6 @@ mmcv>=0.3.0
 mmdet
 motmetrics
 numpy
+scalabel
 torch>=1.1
 torchvision
-
-git+git://github.com/scalabel/scalabel.git
