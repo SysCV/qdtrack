@@ -25,16 +25,16 @@ First, uncompress the downloaded annotation file and you will obtain a folder na
 To convert the detection set, you can do as 
 ```bash
 mkdir data/bdd/labels/det_20
-python tools/convert_datasets/bdd2coco.py -m det -l bdd100k/labels/det_20/det_${SET_NAME}.json -o data/bdd/labels/det_20/det_${SET_NAME}_cocofmt.json
+python -m bdd100k.label.to_coco -m det -l bdd100k/labels/det_20/det_${SET_NAME}.json -o data/bdd/labels/det_20/det_${SET_NAME}_cocofmt.json
 ```
 
 To convert the tracking set, you can do as 
 ```bash
 mkdir data/bdd/labels/box_track_20
-python tools/convert_datasets/bdd2coco.py -m box_track -l bdd100k/labels/box_track_20/${SET_NAME} -o data/bdd/labels/box_track_20/box_track_${SET_NAME}_cocofmt.json
+python -m bdd100k.label.to_coco -m box_track -l bdd100k/labels/box_track_20/${SET_NAME} -o data/bdd/labels/box_track_20/box_track_${SET_NAME}_cocofmt.json
 ```
 
-The `${SET_NAME}` here can be one of ['train', 'val', 'test].
+The `${SET_NAME}` here can be one of ['train', 'val'].
 
 #### Symlink the data
 
