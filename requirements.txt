@@ -4,3 +4,5 @@ motmetrics
 numpy
 torch>=1.1
 torchvision
+
+git+git://github.com/scalabel/scalabel.git
