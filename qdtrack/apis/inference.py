@@ -52,7 +52,7 @@ def init_model(config, checkpoint=None, device='cuda:0', cfg_options=None):
     return model
 
 
-def inference_model(model, imgs):
+def inference_model(model, imgs, frame_id=0):
     """Inference image(s) with the detector.
 
     Args:
@@ -83,13 +83,14 @@ def inference_model(model, imgs):
 
     datas = []
     for i, img in enumerate(imgs):
+        curr_frame_id = i if is_batch else frame_id
         # prepare data
         if isinstance(img, np.ndarray):
             # directly add img
-            data = dict(img=img, frame_id=i)
+            data = dict(img=img, frame_id=curr_frame_id)
         else:
             # add information into dict
-            data = dict(img_info=dict(filename=img), img_prefix=None, frame_id=i)
+            data = dict(img_info=dict(filename=img), img_prefix=None, frame_id=curr_frame_id)
         # build the data pipeline
 
         data = test_pipeline(data)
