@@ -1,8 +1,26 @@
+import matplotlib
+import matplotlib.pyplot as plt
+import mmcv
+import numpy as np
+import os
+import random
+import seaborn as sns
+from matplotlib.patches import Rectangle
 from mmdet.core import bbox2result
 from mmdet.models import TwoStageDetector
+from PIL import ImageColor
 
 from qdtrack.core import track2result
 from ..builder import MODELS, build_tracker
+
+matplotlib.use('Agg')
+
+
+def random_color(seed):
+    random.seed(seed)
+    colors = sns.color_palette(n_colors=64)
+    color = random.choice(colors)
+    return color
 
 
 @MODELS.register_module()
@@ -96,31 +114,18 @@ class QuasiDenseFasterRCNN(TwoStageDetector):
     def show_result(self,
                     img,
                     result,
-                    score_thr=0.3,
-                    bbox_color='green',
-                    text_color='green',
                     thickness=1,
                     font_scale=0.5,
-                    win_name='',
                     show=False,
-                    wait_time=0,
-                    out_file=None,
-                    draw_track=False):
+                    out_file=None):
         """Draw `result` over `img`.
 
         Args:
             img (str or Tensor): The image to be displayed.
             result (Tensor or tuple): The results to draw over `img`
                 bbox_result or (bbox_result, segm_result).
-            score_thr (float, optional): Minimum score of bboxes to be shown.
-                Default: 0.3.
-            bbox_color (str or tuple or :obj:`Color`): Color of bbox lines.
-            text_color (str or tuple or :obj:`Color`): Color of texts.
             thickness (int): Thickness of lines.
             font_scale (float): Font scales of texts.
-            win_name (str): The window name.
-            wait_time (int): Value of waitKey param.
-                Default: 0.
             show (bool): Whether to show the image.
                 Default: False.
             out_file (str or None): The filename to write the image.
@@ -131,65 +136,56 @@ class QuasiDenseFasterRCNN(TwoStageDetector):
         """
         img = mmcv.imread(img)
         img = img.copy()
-        bbox_result = result['bbox_result']
-        segm_result = result['segm_result']
+        # bbox_result = result['bbox_result']
+        # segm_result = result['segm_result']
         track_result = result['track_result']
 
-        if draw_track:
-            # draw segtrack masks
-            for id, item in track_result.items():
-                color = (np.array(random_color(id)) * 256).astype(np.uint8)
-                mask = item['segm']
-                img[mask] = img[mask] * 0.5 + color * 0.5
-            bboxes = np.array([res['bbox'] for res in track_result.values()])
-            labels = np.array([res['label'] for res in track_result.values()])
+        if isinstance(img, str):
+            img = plt.imread(img)
         else:
-            # draw bbox rectangles
-            bboxes = np.vstack(bbox_result)
-            labels = [
-                np.full(bbox.shape[0], i, dtype=np.int32)
-                for i, bbox in enumerate(bbox_result)
-            ]
-            labels = np.concatenate(labels)
-            # draw segmentation masks
-            if segm_result is not None and len(labels) > 0:  # non empty
-                segms = mmcv.concat_list(segm_result)
-                inds = np.where(bboxes[:, -1] > score_thr)[0]
-                np.random.seed(42)
-                color_masks = [
-                    np.random.randint(0, 256, (1, 3), dtype=np.uint8)
-                    for _ in range(max(labels) + 1)
-                ]
-                for i in inds:
-                    i = int(i)
-                    color_mask = color_masks[labels[i]]
-                    mask = segms[i]
-                    img[mask] = img[mask] * 0.5 + color_mask * 0.5
+            img = mmcv.bgr2rgb(img)
+        plt.imshow(img)
+        plt.gca().set_axis_off()
+        plt.autoscale(False)
+        plt.subplots_adjust(
+            top=1, bottom=0, right=1, left=0, hspace=None, wspace=None)
+        plt.margins(0, 0)
+        plt.gca().xaxis.set_major_locator(plt.NullLocator())
+        plt.gca().yaxis.set_major_locator(plt.NullLocator())
 
-        # if out_file specified, do not show image in window
+        # draw segtrack masks
+        for id, item in track_result.items():
+            # mask = item['segm']
+            # img[mask] = img[mask] * 0.5 + color * 0.5
+            bbox = item['bbox']
+            label = item['label']
+            bbox_int = bbox.astype(np.int32)
+            left_top = (bbox_int[0], bbox_int[1])
+            w = bbox_int[2] - bbox_int[0] + 1
+            h = bbox_int[3] - bbox_int[1] + 1
+            color = random_color(id)
+            plt.gca().add_patch(
+                Rectangle(
+                    left_top, w, h, thickness, edgecolor=color, facecolor='none'))
+            label_text = '{}'.format(int(id))
+            bg_height = 15
+            bg_width = 12
+            bg_width = len(label_text) * bg_width
+            plt.gca().add_patch(
+                Rectangle((left_top[0], left_top[1] - bg_height),
+                        bg_width,
+                        bg_height,
+                        thickness,
+                        edgecolor=color,
+                        facecolor=color))
+            plt.text(left_top[0] - 1, left_top[1], label_text, fontsize=5)
+
+        dir_name, file_name = os.path.split(out_file)
+        if not os.path.isdir(dir_name):
+            os.makedirs(dir_name)
         if out_file is not None:
-            show = False
-        # draw bounding boxes
-        if bboxes.shape[0] > 0:
-            mmcv.imshow_det_bboxes(
-                img,
-                bboxes,
-                labels,
-                class_names=self.CLASSES,
-                score_thr=score_thr,
-                bbox_color=bbox_color,
-                text_color=text_color,
-                thickness=thickness,
-                font_scale=font_scale,
-                win_name=win_name,
-                show=show,
-                wait_time=wait_time,
-                out_file=out_file)
-        else:
-            img = mmcv.imread(img)
-            img = np.ascontiguousarray(img)
-            if out_file is not None:
-                mmcv.imwrite(img, out_file)
+            plt.savefig(out_file, dpi=300, bbox_inches='tight', pad_inches=0.0)
+        plt.show()
+        plt.clf()
 
-        if not (show or out_file):
-            return img
+        return img

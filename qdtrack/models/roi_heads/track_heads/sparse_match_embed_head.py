@@ -31,7 +31,8 @@ class SparseMatchEmbedHead(QuasiDenseEmbedHead):
             dist = cal_similarity(
                 key_embed,
                 ref_embed,
-                method='dot_product')
+                method='dot_product',
+                temperature=self.softmax_temp)
             dists.append(dist)
             if self.loss_track_aux is not None:
                 cos_dist = cal_similarity(

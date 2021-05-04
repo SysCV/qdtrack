@@ -1,4 +1,5 @@
 # model settings
+find_unused_parameters = True
 model = dict(
     type='QuasiDenseFasterRCNN',
     pretrained='torchvision://resnet50',

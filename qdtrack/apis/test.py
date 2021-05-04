@@ -7,6 +7,7 @@ from collections import defaultdict
 import mmcv
 import torch
 import torch.distributed as dist
+from mmcv.image import tensor2imgs
 from mmcv.runner import get_dist_info
 
 
@@ -47,9 +48,7 @@ def single_gpu_test(model,
                     img_show,
                     result,
                     show=show,
-                    out_file=out_file,
-                    score_thr=show_score_thr,
-                    draw_track=True)
+                    out_file=out_file)
 
         batch_size = data['img'][0].size(0)
         for _ in range(batch_size):
