@@ -173,8 +173,8 @@ train_pipeline = [
         type='LoadMultiImagesFromFile',
         to_float32=True,
         file_client_args=dict(
-            vid_db_path=data_root + 'hdf5s/train.hdf5',
-            img_db_path=data_root + 'hdf5s/train_det.hdf5',
+            vid_db_path=data_root + 'hdf5s/track_train.hdf5',
+            img_db_path=data_root + 'hdf5s/100k_train.hdf5',
             backend='hdf5')),
     dict(type='SeqLoadAnnotations', with_bbox=True, with_ins_id=True),
     dict(type='SeqResize', img_scale=(1296, 720), keep_ratio=True),
@@ -192,7 +192,7 @@ test_pipeline = [
         type='LoadImageFromFile',
         to_float32=True,
         file_client_args=dict(
-            vid_db_path=data_root + 'hdf5s/val.hdf5',
+            vid_db_path=data_root + 'hdf5s/track_val.hdf5',
             backend='hdf5')),
     dict(
         type='MultiScaleFlipAug',

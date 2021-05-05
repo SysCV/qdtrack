@@ -1,6 +1,26 @@
+from collections import defaultdict
 from mmcv.parallel import DataContainer as DC
 from mmdet.datasets.builder import PIPELINES
 from mmdet.datasets.pipelines import Collect, DefaultFormatBundle, to_tensor
+
+
+@PIPELINES.register_module()
+class SeqImageToTensor(object):
+
+    def __init__(self, keys):
+        self.keys = keys
+
+    def __call__(self, results):
+        for res in results:
+            for key in self.keys:
+                img = res[key]
+                if len(img.shape) < 3:
+                    img = np.expand_dims(img, -1)
+                res[key] = to_tensor(img.transpose(2, 0, 1))
+        return results
+
+    def __repr__(self):
+        return self.__class__.__name__ + f'(keys={self.keys})'
 
 
 @PIPELINES.register_module()
@@ -10,8 +30,9 @@ class SeqDefaultFormatBundle(DefaultFormatBundle):
         outs = []
         for _results in results:
             _results = super().__call__(_results)
-            _results['gt_match_indices'] = DC(
-                to_tensor(_results['gt_match_indices']))
+            if 'gt_match_indices' in _results:
+                _results['gt_match_indices'] = DC(
+                    to_tensor(_results['gt_match_indices']))
             outs.append(_results)
         return outs
 
@@ -73,7 +94,7 @@ class SeqCollect(VideoCollect):
                  ref_prefix='ref',
                  meta_keys=('filename', 'ori_filename', 'ori_shape',
                             'img_shape', 'pad_shape', 'scale_factor', 'flip',
-                            'flip_direction', 'img_norm_cfg')):
+                            'flip_direction', 'img_norm_cfg', 'frame_id')):
         self.keys = keys
         self.ref_prefix = ref_prefix
         self.meta_keys = meta_keys
@@ -89,5 +110,32 @@ class SeqCollect(VideoCollect):
         data.update(outs[0])
         for k, v in outs[1].items():
             data[f'{self.ref_prefix}_{k}'] = v
+
+        return data
+
+
+@PIPELINES.register_module(force=True)
+class ClipCollect(VideoCollect):
+
+    def __init__(self,
+                 keys,
+                 ref_prefix='ref',
+                 meta_keys=('filename', 'ori_filename', 'ori_shape',
+                            'img_shape', 'pad_shape', 'scale_factor', 'flip',
+                            'flip_direction', 'img_norm_cfg')):
+        self.keys = keys
+        self.ref_prefix = ref_prefix
+        self.meta_keys = meta_keys
+
+    def __call__(self, results):
+        outs = []
+        for _results in results:
+            _results = super().__call__(_results)
+            outs.append(_results)
+
+        data = defaultdict(list)
+        for k in outs[0].keys():
+            for out in outs:
+                data[k].append(out[k])
 
         return data

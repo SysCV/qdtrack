@@ -1,3 +1,5 @@
+from qdtrack.datasets.pipelines.formatting import VideoCollect
+import numpy as np
 from mmdet.datasets.builder import PIPELINES
 from mmdet.datasets.pipelines import LoadAnnotations, LoadImageFromFile
 
@@ -47,3 +49,12 @@ class SeqLoadAnnotations(LoadAnnotations):
                 _results = self._load_ins_ids(_results)
             outs.append(_results)
         return outs
+
+
+@PIPELINES.register_module()
+class ClipLoadAnnotations(SeqLoadAnnotations):
+
+    def _load_ins_ids(self, results):
+        results['gt_instance_ids'] = np.array(
+            results['ann_info']['instance_ids'], dtype=np.int)
+        return results
