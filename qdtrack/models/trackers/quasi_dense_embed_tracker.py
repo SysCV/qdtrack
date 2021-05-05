@@ -182,8 +182,7 @@ class QuasiDenseEmbedTracker(object):
                 raise NotImplementedError
 
             if self.with_cats:
-                cat_same = labels.view(-1, 1) == memo_labels.view(1, -1)
-                cat_same = cat_same.cuda()
+                cat_same = (labels.view(-1, 1) == memo_labels.view(1, -1)).cuda()
                 scores *= cat_same.float()
 
             for i in range(bboxes.size(0)):
