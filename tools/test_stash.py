@@ -85,11 +85,11 @@ def main():
         cfg.merge_from_dict(args.cfg_options)
 
     if cfg.get('USE_MMDET', False):
-        from mmdet.apis import multi_gpu_test, single_gpu_test
+        from mmdet.apis import multi_gpu_test, single_gpu_test, single_gpu_test_stash
         from mmdet.models import build_detector as build_model
         from mmdet.datasets import build_dataloader
     else:
-        from qdtrack.apis import multi_gpu_test, single_gpu_test
+        from qdtrack.apis import multi_gpu_test, single_gpu_test, single_gpu_test_stash
         from qdtrack.models import build_model
         from qdtrack.datasets import build_dataloader
 
@@ -110,13 +110,15 @@ def main():
     dataset = build_dataset(cfg.data.test)
     data_loader = build_dataloader(
         dataset,
-        samples_per_gpu=1,
+        samples_per_gpu=8,
         workers_per_gpu=cfg.data.workers_per_gpu,
         dist=distributed,
         shuffle=False)
 
     # build the model and load checkpoint
     model = build_model(cfg.model, train_cfg=None, test_cfg=cfg.model.test_cfg)
+    # import IPython
+    # IPython.embed()
     # fp16_cfg = cfg.get('fp16', None)
     # if fp16_cfg is not None:
     #     wrap_fp16_model(model)
@@ -131,9 +133,13 @@ def main():
         model.CLASSES = dataset.CLASSES
 
     if not distributed:
-        model = MMDataParallel(model)
-        # model = MMDataParallel(model, device_ids=[0])
-        outputs = single_gpu_test(model, data_loader, args.show, args.show_dir,
+        # device = torch.device("cpu")
+        # import pdb
+        # pdb.set_trace()
+        # model = torch.nn.DataParallel(model, device_ids=[device])
+        # assert 1 == 2
+        model = MMDataParallel(model, device_ids=[0])
+        single_gpu_test_stash(model, data_loader, args.show, args.show_dir,
                                   args.show_score_thr)
     else:
         model = MMDistributedDataParallel(

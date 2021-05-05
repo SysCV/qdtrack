@@ -45,6 +45,7 @@ class QuasiDenseEmbedTracker(object):
         return False if self.tracklets else True
 
     def update_memo(self, ids, bboxes, embeds, labels, frame_id):
+        # print (f"we are updating memo: {len(self.backdrops)}")
         tracklet_inds = ids > -1
 
         # update memo
@@ -103,6 +104,7 @@ class QuasiDenseEmbedTracker(object):
 
     @property
     def memo(self):
+        # print (f"memo:{len(self.backdrops)}")
         memo_embeds = []
         memo_ids = []
         memo_bboxes = []
@@ -135,6 +137,8 @@ class QuasiDenseEmbedTracker(object):
             0), memo_vs
 
     def match(self, bboxes, labels, track_feats, frame_id, asso_tau=-1):
+#        print ("")
+#        print (f"running match -- len of backdrops: {len(self.backdrops)}")
 
         _, inds = bboxes[:, -1].sort(descending=True)
         bboxes = bboxes[inds, :]
@@ -179,6 +183,7 @@ class QuasiDenseEmbedTracker(object):
 
             if self.with_cats:
                 cat_same = labels.view(-1, 1) == memo_labels.view(1, -1)
+                cat_same = cat_same.cuda()
                 scores *= cat_same.float()
 
             for i in range(bboxes.size(0)):

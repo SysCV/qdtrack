@@ -28,10 +28,30 @@ def single_gpu_test(model,
         if show or out_dir:
             pass  # TODO
 
-        batch_size = data['img'][0].size(0)
+        batch_size = data['img'][0].data[0].size(0)
         for _ in range(batch_size):
             prog_bar.update()
     return results
+def single_gpu_test_stash(model,
+                    data_loader,
+                    show=False,
+                    out_dir=None,
+                    show_score_thr=0.3):
+    model.eval()
+    results = defaultdict(list)
+    dataset = data_loader.dataset
+    prog_bar = mmcv.ProgressBar(len(dataset))
+    for i, data in enumerate(data_loader):
+        with torch.no_grad():
+            # result = model(return_loss=False, rescale=True, **data)
+            model.module.extract_feats(out_dir,**data)
+
+        if show or out_dir:
+            pass  # TODO
+
+        batch_size = data['img'][0].data[0].size(0)
+        for _ in range(batch_size):
+            prog_bar.update()
 
 
 def multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False):

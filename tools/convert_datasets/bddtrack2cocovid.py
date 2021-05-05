@@ -40,17 +40,17 @@ def main():
         img_id, ann_id = 0, 0
         for vid_id, vid_name in enumerate(tqdm(vids)):
             vid_infos = mmcv.load(osp.join(args.input, subset, vid_name))
-            video = dict(id=vid_id, name=vid_infos[0]['video_name'])
+            video = dict(id=vid_id, name=vid_infos[0]['videoName'])
             coco['videos'].append(video)
             for img_info in vid_infos:
                 image = dict(
-                    file_name=osp.join(img_info['video_name'],
+                    file_name=osp.join(img_info['videoName'],
                                        img_info['name']),
                     height=720,
                     width=1280,
                     id=img_id,
                     video_id=vid_id,
-                    frame_id=img_info['index'])
+                    frame_id=img_info['frameIndex'])
                 coco['images'].append(image)
                 for ann_info in img_info['labels']:
                     if ann_info['category'] in CLASSES:
@@ -72,9 +72,9 @@ def main():
                         instance_id=ann_info['id'],
                         bbox=[x1, y1, x2 - x1, y2 - y1],
                         area=area,
-                        occluded=ann_info['attributes']['Occluded'],
-                        truncated=ann_info['attributes']['Truncated'],
-                        iscrowd=ann_info['attributes']['Crowd'])
+                        occluded=ann_info['attributes']['occluded'],
+                        truncated=ann_info['attributes']['truncated'],
+                        iscrowd=ann_info['attributes']['crowd'])
                     coco['annotations'].append(ann)
                     ann_id += 1
                 img_id += 1
