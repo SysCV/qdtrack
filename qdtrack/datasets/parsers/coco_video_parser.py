@@ -1,7 +1,7 @@
-from collections import defaultdict
-
 import numpy as np
-from pycocotools.coco import COCO, _isArrayLike
+from collections import defaultdict
+from mmdet.datasets.api_wrappers import COCO
+from pycocotools.coco import _isArrayLike
 
 
 class CocoVID(COCO):

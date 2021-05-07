@@ -1,11 +1,26 @@
-import random
-
 import mmcv
 import numpy as np
+import os
+import os.path as osp
+import pycocotools.mask as mask_utils
+import random
+from functools import partial
 from mmdet.datasets import DATASETS, CocoDataset
+from multiprocessing import Pool
+from PIL import Image
+from scalabel.label.io import save
+from scalabel.label.transforms import bbox_to_box2d
+from scalabel.label.typing import Frame, Label
+from tqdm import tqdm
 
-from qdtrack.core import eval_mot
+from ..core import eval_mot
+from ..core.evaluation import xyxy2xywh
 from .parsers import CocoVID
+
+CATEGORIES = [
+    '', 'pedestrian', 'rider', 'car', 'truck', 'bus', 'train', 'motorcycle',
+    'bicycle', 'traffic light', 'traffic sign']
+SHAPE = [720, 1280]
 
 
 @DATASETS.register_module()
@@ -281,3 +296,144 @@ class CocoVideoDataset(CocoDataset):
             eval_results.update(track_eval_results)
 
         return eval_results
+
+    def mask_prepare(self, track_dict):
+        scores, colors, masks = [], [], []
+        for id_, instance in track_dict.items():
+            masks.append(mask_utils.decode(instance['segm']))
+            colors.append([instance['label'] + 1, 0, id_ >> 8, id_ & 255])
+            scores.append(instance['bbox'][-1])
+        return scores, colors, masks
+
+    def mask_merge(self, mask_infor, img_name, bitmask_base):
+        scores, colors, masks = mask_infor
+        bitmask = np.zeros((*SHAPE, 4), dtype=np.uint8)
+        sorted_idxs = np.argsort(scores)
+        for idx in sorted_idxs:
+            for i in range(4):
+                bitmask[..., i] = (
+                    bitmask[..., i] * (1 - masks[idx]) +
+                    masks[idx] * colors[idx][i])
+        bitmask_path = osp.join(bitmask_base, img_name.replace('.jpg', '.png'))
+        bitmask_dir = osp.split(bitmask_path)[0]
+        if not osp.exists(bitmask_dir):
+            os.makedirs(bitmask_dir)
+        bitmask = Image.fromarray(bitmask)
+        bitmask.save(bitmask_path)
+
+    def mask_merge_parallel(self, track_dicts, img_names, bitmask_base, nproc):
+        with Pool(nproc) as pool:
+            print('\nCollecting mask information')
+            mask_infors = pool.map(self.mask_prepare, tqdm(track_dicts))
+            print('\nMerging overlapped masks.')
+            pool.starmap(
+                partial(self.mask_merge, bitmask_base=bitmask_base),
+                tqdm(zip(mask_infors, img_names), total=len(mask_infors)))
+
+    def det_to_bdd(self, results, out_base, nproc):
+        bdd100k = []
+        ann_id = 0
+        print(f'\nStart converting to BDD100K detection format')
+        for idx, bboxes_list in tqdm(enumerate(results['bbox_result'])):
+            img_name = self.data_infos[idx]['file_name']
+            frame = Frame(name=img_name, labels=[])
+
+            for cls_, bboxes in enumerate(bboxes_list):
+                for bbox in bboxes:
+                    ann_id += 1
+                    label = Label(
+                        id=ann_id,
+                        score=bbox[-1],
+                        box2d=bbox_to_box2d(xyxy2xywh(bbox)),
+                        category=CATEGORIES[cls_ + 1])
+                    frame.labels.append(label)
+            bdd100k.append(frame)
+
+        print(f'\nWriting the converted json')
+        out_path = osp.join(out_base, "det.json")
+        save(out_path, bdd100k)
+
+    def ins_seg_to_bdd(self, results, out_base, nproc=4):
+        bdd100k = []
+        bitmask_base = osp.join(out_base, "ins_seg")
+        if not osp.exists(bitmask_base):
+            os.makedirs(bitmask_base)
+
+        track_dicts = []
+        img_names = [
+            self.data_infos[idx]['file_name']
+            for idx in range(len(results['bbox_result']))]
+
+        print(f'\nStart converting to BDD100K instance segmentation format')
+        ann_id = 0
+        for idx, [bboxes_list, segms_list] in enumerate(
+                zip(results['bbox_result'], results['segm_result'])):
+            index = 0
+            frame = Frame(name=img_names[idx], labels=[])
+            track_dict = {}
+            for cls_, (bboxes, segms) in enumerate(zip(bboxes_list,
+                                                       segms_list)):
+                for bbox, segm in zip(bboxes, segms):
+                    ann_id += 1
+                    index += 1
+                    label = Label(id=str(ann_id), index=index, score=bbox[-1])
+                    frame.labels.append(label)
+                    instance = {'bbox': bbox, 'segm': segm, 'label': cls_}
+                    track_dict[index] = instance
+            
+            bdd100k.append(frame)
+            track_dicts.append(track_dict)
+
+        print(f'\nWriting the converted json')
+        out_path = osp.join(out_base, 'ins_seg.json')
+        save(out_path, bdd100k)
+
+        self.mask_merge_parallel(track_dicts, img_names, bitmask_base, nproc)
+
+    def box_track_to_bdd(self, results, out_base, nproc):
+        bdd100k = []
+        track_base = osp.join(out_base, "box_track")
+        if not osp.exists(track_base):
+            os.makedirs(track_base)
+
+        print(f'\nStart converting to BDD100K box tracking format')
+        for idx, track_dict in enumerate(results['track_result']):
+            img_name = self.data_infos[idx]['file_name']
+            frame = Frame(name=img_name, labels=[])
+
+            for id_, instance in track_dict.items():
+                bbox = instance['bbox']
+                cls_ = instance['label']
+                label = Label(
+                    id=id_,
+                    score=bbox[-1],
+                    box2d=bbox_to_box2d(xyxy2xywh(bbox)),
+                    category=CATEGORIES[cls_ + 1])
+                frame.labels.append(label)
+            bdd100k.append(frame)
+
+        print(f'\nWriting the converted json')
+        out_path = osp.join(out_base, "box_track.json")
+        save(out_path, bdd100k)
+
+    def seg_track_to_bdd(self, results, out_base, nproc=4):
+        bitmask_base = osp.join(out_base, "seg_track")
+        if not osp.exists(bitmask_base):
+            os.makedirs(bitmask_base)
+
+        print(f'\nStart converting to BDD100K seg tracking format')
+        img_names = [
+            self.data_infos[idx]['file_name']
+            for idx in range(len(results['track_result']))]
+        self.mask_merge_parallel(results['track_result'], img_names,
+                                 bitmask_base, nproc)
+
+    def preds2bdd100k(self, results, tasks, out_base, *args, **kwargs):
+        metric2func = dict(
+            det=self.det_to_bdd,
+            ins_seg=self.ins_seg_to_bdd,
+            box_track=self.box_track_to_bdd,
+            seg_track=self.seg_track_to_bdd)
+
+        for task in tasks:
+            metric2func[task](results, out_base, *args, **kwargs)

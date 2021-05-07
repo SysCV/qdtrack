@@ -109,7 +109,10 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 PORT=29500 ./tools/dist_train.sh ${CONFIG_FILE} 4
 CUDA_VISIBLE_DEVICES=4,5,6,7 PORT=29501 ./tools/dist_train.sh ${CONFIG_FILE} 4
 ```
 
-### Test a Model
+### Test a Model with COCO-format
+
+Note that, in this repo, the evaluation metrics are computed with COCO-format.
+But to report the results on BDD100K, evaluating with BDD100K-format is required.
 
 - single GPU
 - single node multiple GPU
@@ -129,3 +132,17 @@ Optional arguments:
 - `RESULT_FILE`: Filename of the output results in pickle format. If not specified, the results will not be saved to a file.
 - `EVAL_METRICS`: Items to be evaluated on the results. Allowed values depend on the dataset, e.g., `bbox`, `track`.
 - `--cfg-options`: If specified, some setting in the used config will be overridden.
+
+
+### Conver to the BDD100K format
+
+We provide scripts to convert the output prediction into BDD100K format jsons and masks,
+which can be submitted to BDD100K codalabs to get the final performance.
+
+python tools/to_bdd.py ${CONFIG_FILE} [--res ${RESULT_FILE}] [--task ${EVAL_METRICS}] [--bdd-dir ${BDD_OUTPUT_DIR} --nproc ${PROCESS_NUM}] [--coco-file ${COCO_PRED_FILE}]
+
+Optional arguments:
+- `RESULT_FILE`: Filename of the output results in pickle format.
+- `TASK_NAME`: Task names in one of [`det`, `ins_seg`, `box_track`, `seg_track`]
+- `BDD_OUPPUT_DIR`: The dir path to save the converted bdd jsons and masks.
+- `COCO_PRED_FILE`: Filename of the json in coco submission format.
