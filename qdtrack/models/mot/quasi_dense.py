@@ -19,18 +19,13 @@ class QuasiDenseFasterRCNN(TwoStageDetector):
         self.is_tao = is_tao
 
     def _freeze_detector(self):
-        self.backbone.eval()
-        self.neck.eval()
-        self.rpn_head.eval()
-        self.roi_head.bbox_head.eval()
-        for param in self.backbone.parameters():
-            param.requires_grad = False
-        for param in self.neck.parameters():
-            param.requires_grad = False
-        for param in self.rpn_head.parameters():
-            param.requires_grad = False
-        for param in self.roi_head.bbox_head.parameters():
-            param.requires_grad = False
+
+        self.detector = [self.backbone, self.neck,
+                         self.rpn_head, self.roi_head.bbox_head]
+        for model in self.detector:
+            model.eval()
+            for param in model.parameters():
+                param.requires_grad = False
 
     def prepare_cfg(self, kwargs):
         if kwargs.get('train_cfg', False):
@@ -107,7 +102,7 @@ class QuasiDenseFasterRCNN(TwoStageDetector):
 
         if track_feats is not None:
             if self.is_tao:
-                track_result = track2result(bboxes, labels, ids,self.roi_head.bbox_head.num_classes)
+                track_result = track2result(bboxes, labels, ids, self.roi_head.bbox_head.num_classes)
             else:
                 track_result = track2result(bboxes, labels, ids)
         else:
