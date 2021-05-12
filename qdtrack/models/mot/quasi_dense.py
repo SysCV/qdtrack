@@ -8,10 +8,24 @@ from ..builder import MODELS, build_tracker
 @MODELS.register_module()
 class QuasiDenseFasterRCNN(TwoStageDetector):
 
-    def __init__(self, tracker=None, *args, **kwargs):
+    def __init__(self, tracker=None, freeze_detector=False, is_tao=False,*args, **kwargs):
         self.prepare_cfg(kwargs)
         super().__init__(*args, **kwargs)
         self.tracker_cfg = tracker
+
+        self.freeze_detector = freeze_detector
+        if self.freeze_detector:
+            self._freeze_detector()
+        self.is_tao = is_tao
+
+    def _freeze_detector(self):
+
+        self.detector = [self.backbone, self.neck,
+                         self.rpn_head, self.roi_head.bbox_head]
+        for model in self.detector:
+            model.eval()
+            for param in model.parameters():
+                param.requires_grad = False
 
     def prepare_cfg(self, kwargs):
         if kwargs.get('train_cfg', False):
@@ -87,7 +101,10 @@ class QuasiDenseFasterRCNN(TwoStageDetector):
                                   self.roi_head.bbox_head.num_classes)
 
         if track_feats is not None:
-            track_result = track2result(bboxes, labels, ids)
+            if self.is_tao:
+                track_result = track2result(bboxes, labels, ids, self.roi_head.bbox_head.num_classes)
+            else:
+                track_result = track2result(bboxes, labels, ids)
         else:
             from collections import defaultdict
             track_result = defaultdict(list)

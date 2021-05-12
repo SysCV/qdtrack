@@ -7,10 +7,11 @@ from .parsers import CocoVID
 from .pipelines import (LoadMultiImagesFromFile, SeqCollect,
                         SeqDefaultFormatBundle, SeqLoadAnnotations,
                         SeqNormalize, SeqPad, SeqRandomFlip, SeqResize)
+from .tao_dataset import TaoDataset
 
 __all__ = [
     'DATASETS', 'PIPELINES', 'build_dataloader', 'build_dataset', 'CocoVID',
     'BDDVideoDataset', 'CocoVideoDataset', 'LoadMultiImagesFromFile',
     'SeqLoadAnnotations', 'SeqResize', 'SeqNormalize', 'SeqRandomFlip',
-    'SeqPad', 'SeqDefaultFormatBundle', 'SeqCollect'
+    'SeqPad', 'SeqDefaultFormatBundle', 'SeqCollect', 'TaoDataset'
 ]
