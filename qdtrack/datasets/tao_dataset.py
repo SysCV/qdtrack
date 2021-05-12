@@ -13,9 +13,6 @@ from .parsers import CocoVID
 @DATASETS.register_module()
 class TaoDataset(CocoVideoDataset):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def load_annotations(self, ann_file):
         """Load annotation from annotation file."""
         if not self.load_as_video:
