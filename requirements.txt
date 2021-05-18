@@ -1,3 +1,4 @@
+h5py
 mmcv>=0.3.0
 mmdet
 motmetrics
