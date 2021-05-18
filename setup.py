@@ -83,6 +83,11 @@ def get_requirements(filename='requirements.txt'):
     here = os.path.dirname(os.path.realpath(__file__))
     with open(os.path.join(here, filename), 'r') as f:
         requires = [line.replace('\n', '') for line in f.readlines()]
+    for i, req in enumerate(requires):
+        if req.startswith("git"):
+            pkg_name = req.split("/")[-1].split(".")[0]
+            req = pkg_name
+        requires[i] = req
     return requires
 
 
