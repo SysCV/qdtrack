@@ -15,7 +15,7 @@ Similarity learning has been recognized as a crucial step for object tracking. H
 <img src="figures/teaser.png" width="600">
 
 ## Main results
-Without bells and whistles, our method outperforms the states of the art on MOT, BDD100K, Waymo, and TAO benchmarks.
+Without bells and whistles, our method outperforms the states of the art on MOT, BDD100K, Waymo, and TAO benchmarks with ResNet-50 as the base model.
 
 
 ### BDD100K test set
@@ -56,16 +56,16 @@ Please refer to [INSTALL.md](docs/INSTALL.md) for installation instructions.
 ## Usages
 Please refer to [GET_STARTED.md](docs/GET_STARTED.md) for dataset preparation and running instructions.
 
-We release [pretrained models](https://drive.google.com/file/d/1YNAQgd8rMqqEG-fRj3VWlO4G5kdwJbxz/view?usp=sharing) on BDD100K dataset for testing.
+Trained models for testing
 
-**New**:
-We release the [pretrained models](https://drive.google.com/file/d/1k8-QOEQ-xiEq6RB384VTSY6FyX2DSYNJ/view) on TAO.
+- [BDD100K model](https://drive.google.com/file/d/1YNAQgd8rMqqEG-fRj3VWlO4G5kdwJbxz/view?usp=sharing)
+- [TAO model](https://drive.google.com/file/d/1k8-QOEQ-xiEq6RB384VTSY6FyX2DSYNJ/view)
 
-More implementations / models on the following benchmarks will be released later:
+More implementations / models on the following benchmarks will be released later
 
-- Waymo
 - MOT16 / MOT17 / MOT20
-- TAO
+
+Waymo models won't be available publicly due to the dataset license constraints.
 
 
 ## Citation
