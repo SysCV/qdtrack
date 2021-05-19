@@ -9,32 +9,44 @@ For more details about the dataset, please refer to the [offial documentation](h
 
 On the offical download page, the required data and annotations are
 
-- `detection` set images: `Images` 
+- `detection` set images: `Images`
 - `detection` set annotations: `Detection 2020 Labels`
 - `tracking` set images: `MOT 2020 Data`
 - `tracking` set annotations: `MOT 2020 Labels`
 
+#### Download TAO
+Please follow [TAO download](https://github.com/TAO-Dataset/tao/blob/master/docs/download.md) instructions.
+
+
 #### Convert annotations
 
+##### BDD100K
 To organize the annotations for training and inference, we implement a [dataset API](../qdtrack/datasets/parsers/coco_video_parser.py) that is similiar to COCO-style.
 
 After downloaded the annotations, please transform the offical annotation files to CocoVID style with the provided [scripts](../tools/convert_datasets).
 
 First, uncompress the downloaded annotation file and you will obtain a folder named `bdd100k`.
 
-To convert the detection set, you can do as 
+To convert the detection set, you can do as
 ```bash
 mkdir data/bdd/labels/det_20
 python -m bdd100k.label.to_coco -m det -l bdd100k/labels/det_20/det_${SET_NAME}.json -o data/bdd/labels/det_20/det_${SET_NAME}_cocofmt.json
 ```
 
-To convert the tracking set, you can do as 
+To convert the tracking set, you can do as
 ```bash
 mkdir data/bdd/labels/box_track_20
 python -m bdd100k.label.to_coco -m box_track -l bdd100k/labels/box_track_20/${SET_NAME} -o data/bdd/labels/box_track_20/box_track_${SET_NAME}_cocofmt.json
 ```
 
 The `${SET_NAME}` here can be one of ['train', 'val'].
+
+##### TAO
+You should first install [TAO toolkit](https://github.com/TAO-Dataset/tao)
+To convert the TAO set. You can do as:
+```bash
+python tools/tao2coco.py -tao data/tao/annotations/ 
+```
 
 #### Symlink the data
 
@@ -58,13 +70,19 @@ Our folder structure follows
 │   │   ├── labels 
 │   │   │   ├── box_track_20
 │   │   │   ├── det_20
+    ├── tao
+        ├── frames
+            ├── train
+            ├── val
+            ├── test
+        ├── annotations
 
 ```
 
 ## Run QDTrack
 This codebase is inherited from [mmdetection](https://github.com/open-mmlab/mmdetection).
 You can refer to the [offical instructions](https://github.com/open-mmlab/mmdetection/blob/master/docs/getting_started.md).
-You can also refer to the short instructions below. 
+You can also refer to the short instructions below.
 We provide config files in [configs](../configs).
 
 ### Train a model
@@ -108,6 +126,9 @@ If you use `dist_train.sh` to launch training jobs, you can set the port in comm
 CUDA_VISIBLE_DEVICES=0,1,2,3 PORT=29500 ./tools/dist_train.sh ${CONFIG_FILE} 4
 CUDA_VISIBLE_DEVICES=4,5,6,7 PORT=29501 ./tools/dist_train.sh ${CONFIG_FILE} 4
 ```
+#### Train TAO model
+Please note that for training qdtrack on TAO. You need first to get a pre_trained object detector on LVISv0.5.
+We offer one [here](https://drive.google.com/file/d/1ndUFC9VOI_dzfJB1nKgiokuYRSjGjhQ5/view?usp=sharing). You may replace the detector with other detectors that you prefer.
 
 ### Test a Model with COCO-format
 

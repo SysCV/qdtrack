@@ -2,6 +2,7 @@ import os
 import tempfile
 
 import mmcv
+import numpy as np
 from mmcv.utils import print_log
 from mmdet.datasets import DATASETS
 from pycocotools.coco import COCO
@@ -197,6 +198,7 @@ class TaoDataset(CocoVideoDataset):
             tao_eval = TaoEval(self.ann_file, result_files['track'])
             tao_eval.params.img_ids = self.img_ids
             tao_eval.params.cat_ids = self.cat_ids
+            tao_eval.params.iou_thrs = np.array([0.5, 0.75])
             tao_eval.run()
 
             tao_eval.print_results()

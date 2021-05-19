@@ -8,14 +8,14 @@ If you have any questions, please go to [Discussions](https://github.com/SysCV/q
 
 ## Abstract
 
-Similarity learning has been recognized as a crucial step for object tracking. However, existing multiple object tracking methods only use sparse ground truth matching as the training objective, while ignoring the majority of the informative regions on the images. In this paper, we present Quasi-Dense Similarity Learning, which densely samples hundreds of region proposals on a pair of images for contrastive learning. We can naturally combine this similarity learning with existing detection methods to build Quasi-Dense Tracking (QDTrack) without turning to displacement regression or motion priors. We also find that the resulting distinctive feature space admits a simple nearest neighbor search at the inference time. Despite its simplicity, QDTrack outperforms all existing methods on MOT, BDD100K, Waymo, and TAO tracking benchmarks. It achieves 68.7 MOTA at 20.3 FPS on MOT17 without using external training data. Compared to methods with similar detectors, it boosts almost 10 points of MOTA and significantly decreases the number of ID switches on BDD100K and Waymo datasets. 
+Similarity learning has been recognized as a crucial step for object tracking. However, existing multiple object tracking methods only use sparse ground truth matching as the training objective, while ignoring the majority of the informative regions on the images. In this paper, we present Quasi-Dense Similarity Learning, which densely samples hundreds of region proposals on a pair of images for contrastive learning. We can naturally combine this similarity learning with existing detection methods to build Quasi-Dense Tracking (QDTrack) without turning to displacement regression or motion priors. We also find that the resulting distinctive feature space admits a simple nearest neighbor search at the inference time. Despite its simplicity, QDTrack outperforms all existing methods on MOT, BDD100K, Waymo, and TAO tracking benchmarks. It achieves 68.7 MOTA at 20.3 FPS on MOT17 without using external training data. Compared to methods with similar detectors, it boosts almost 10 points of MOTA and significantly decreases the number of ID switches on BDD100K and Waymo datasets.
 
 
 ## Quasi-dense matching
 <img src="figures/teaser.png" width="600">
 
 ## Main results
-Without bells and whistles, our method outperforms the states of the art on MOT, BDD100K, Waymo, and TAO benchmarks.
+Without bells and whistles, our method outperforms the states of the art on MOT, BDD100K, Waymo, and TAO benchmarks with ResNet-50 as the base model.
 
 
 ### BDD100K test set
@@ -56,16 +56,19 @@ Please refer to [INSTALL.md](docs/INSTALL.md) for installation instructions.
 ## Usages
 Please refer to [GET_STARTED.md](docs/GET_STARTED.md) for dataset preparation and running instructions.
 
-We release [pretrained models](https://drive.google.com/file/d/1YNAQgd8rMqqEG-fRj3VWlO4G5kdwJbxz/view?usp=sharing) on BDD100K dataset for testing.
+Trained models for testing
 
-More implementations / models on the following benchmarks will be released later:
+- [BDD100K model](https://drive.google.com/file/d/1YNAQgd8rMqqEG-fRj3VWlO4G5kdwJbxz/view?usp=sharing)
+- [TAO model](https://drive.google.com/file/d/1k8-QOEQ-xiEq6RB384VTSY6FyX2DSYNJ/view)
 
-- Waymo
+More implementations / models on the following benchmarks will be released later
+
 - MOT16 / MOT17 / MOT20
-- TAO
+
+Waymo models won't be available publicly due to the dataset license constraints.
 
 
-## Citation 
+## Citation
 
 ```
 @InProceedings{qdtrack,
