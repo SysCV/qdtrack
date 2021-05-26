@@ -179,7 +179,7 @@ class QuasiDenseEmbedTracker(object):
 
             if self.with_cats:
                 cat_same = labels.view(-1, 1) == memo_labels.view(1, -1)
-                scores *= cat_same.float()
+                scores *= cat_same.float().to(scores.device)
 
             for i in range(bboxes.size(0)):
                 conf, memo_ind = torch.max(scores[i, :], dim=0)

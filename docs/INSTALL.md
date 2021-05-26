@@ -31,12 +31,8 @@ You can check the supported CUDA version for precompiled packages on the [PyTorc
 c. Install mmcv and mmdetection.
 
 ```shell
-pip install mmcv-full
-
-# Please find an another path to install mmdetection
-git clone https://github.com/open-mmlab/mmdetection.git
-cd mmdetection
-python setup.py develop
+pip install mmcv-full==1.2.7
+pip install mmdet==2.10.0
 ```
 
 You can also refer to the [offical instructions](https://github.com/open-mmlab/mmdetection/blob/master/docs/install.md).
@@ -44,7 +40,7 @@ You can also refer to the [offical instructions](https://github.com/open-mmlab/m
 Note that mmdetection uses their forked version of pycocotools via the github repo instead of pypi for better compatibility. If you meet issues, you may need to re-install the cocoapi through
 ```shell
 pip uninstall pycocotools
-pip install pycocotools@git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocotools
+pip install git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocotools
 ```
 
 d. Install QDTrack
