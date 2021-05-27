@@ -2,10 +2,9 @@ import argparse
 import os
 
 import mmcv
-import torch
 from mmcv import Config, DictAction
 from mmdet.datasets import build_dataset
-from qdtrack.core.to_bdd import preds2bdd100k
+from qdtrack.core.to_bdd100k import preds2bdd100k
 
 
 def parse_args():

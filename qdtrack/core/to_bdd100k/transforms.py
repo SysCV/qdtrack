@@ -14,7 +14,7 @@ CATEGORIES = [
     'bicycle', 'traffic light', 'traffic sign']
 
 
-def det_to_bdd(dataset, results, out_base, nproc):
+def det_to_bdd100k(dataset, results, out_base, nproc):
     bdd100k = []
     ann_id = 0
     print(f'\nStart converting to BDD100K detection format')
@@ -40,7 +40,7 @@ def det_to_bdd(dataset, results, out_base, nproc):
     save(out_path, bdd100k)
 
 
-def ins_seg_to_bdd(dataset, results, out_base, nproc=4):
+def ins_seg_to_bdd100k(dataset, results, out_base, nproc=4):
     bdd100k = []
     bitmask_base = osp.join(out_base, "ins_seg")
     if not osp.exists(bitmask_base):
@@ -80,7 +80,7 @@ def ins_seg_to_bdd(dataset, results, out_base, nproc=4):
     mask_merge_parallel(track_dicts, img_names, bitmask_base, nproc)
 
 
-def box_track_to_bdd(dataset, results, out_base, nproc):
+def box_track_to_bdd100k(dataset, results, out_base, nproc):
     bdd100k = []
     track_base = osp.join(out_base, "box_track")
     if not osp.exists(track_base):
@@ -113,7 +113,7 @@ def box_track_to_bdd(dataset, results, out_base, nproc):
     save(out_path, bdd100k)
 
 
-def seg_track_to_bdd(dataset, results, out_base, nproc=4):
+def seg_track_to_bdd100k(dataset, results, out_base, nproc=4):
     bitmask_base = osp.join(out_base, "seg_track")
     if not osp.exists(bitmask_base):
         os.makedirs(bitmask_base)
@@ -127,10 +127,10 @@ def seg_track_to_bdd(dataset, results, out_base, nproc=4):
 
 def preds2bdd100k(dataset, results, tasks, out_base, *args, **kwargs):
     metric2func = dict(
-        det=det_to_bdd,
-        ins_seg=ins_seg_to_bdd,
-        box_track=box_track_to_bdd,
-        seg_track=seg_track_to_bdd)
+        det=det_to_bdd100k,
+        ins_seg=ins_seg_to_bdd100k,
+        box_track=box_track_to_bdd100k,
+        seg_track=seg_track_to_bdd100k)
 
     for task in tasks:
         metric2func[task](dataset, results, out_base, *args, **kwargs)
