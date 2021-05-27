@@ -5,6 +5,7 @@ import mmcv
 import torch
 from mmcv import Config, DictAction
 from mmdet.datasets import build_dataset
+from qdtrack.core.to_bdd import preds2bdd100k
 
 
 def parse_args():
@@ -65,8 +66,8 @@ def main():
     if args.coco_file:
         dataset.format_results(results, jsonfile_prefix=args.coco_file)
     if args.bdd_dir:
-        dataset.preds2bdd100k(
-            results, args.task, out_base=args.bdd_dir, nproc=args.nproc)
+        preds2bdd100k(
+            dataset, results, args.task, out_base=args.bdd_dir, nproc=args.nproc)
 
 if __name__ == '__main__':
     main()
