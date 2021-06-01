@@ -1,8 +1,11 @@
 # Quasi-Dense Tracking
 
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/quasi-dense-instance-similarity-learning/multiple-object-tracking-on-bdd100k)](https://paperswithcode.com/sota/multiple-object-tracking-on-bdd100k?p=quasi-dense-instance-similarity-learning)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/quasi-dense-instance-similarity-learning/multiple-object-tracking-on-waymo-open)](https://paperswithcode.com/sota/multiple-object-tracking-on-waymo-open?p=quasi-dense-instance-similarity-learning)
+
 This is the offical implementation of paper [Quasi-Dense Similarity Learning for Multiple Object Tracking](https://arxiv.org/abs/2006.06664).
 
-We present a [trailer](https://youtu.be/o8HRJAOZidc) that consists of method illustrations and tracking visualizations. Take a look!
+We present a [trailer](https://youtu.be/o8HRJAOZidc) that consists of method illustrations and tracking visualizations. Our project website contains more information: [vis.xyz/pub/qdtrack](https://www.vis.xyz/pub/qdtrack/).
 
 If you have any questions, please go to [Discussions](https://github.com/SysCV/qdtrack/discussions).
 
