@@ -11,7 +11,7 @@ from mmdet.core import get_classes
 from mmdet.datasets import replace_ImageToTensor
 from mmdet.datasets.pipelines import Compose
 from qdtrack.models import build_model
-import os
+
 def init_model(config, checkpoint=None, device='cuda:0', cfg_options=None):
     """Initialize a detector from config file.
 
@@ -152,19 +152,3 @@ def show_result_pyplot(model,
         win_name=title,
         bbox_color=(72, 101, 241),
         text_color=(72, 101, 241))
-
-
-if __name__ == "__main__":
-    checkpoint = '/home/ubuntu/qdtrack-frcnn_r50_fpn_12e_bdd100k-13328aed.pth'
-    config = '/home/ubuntu/qdtrack-frcnn_r50_fpn_12e_bdd100k.py'
-    model = init_model(config, checkpoint=checkpoint)
-    model.eval()
-    dir = '/home/ubuntu/bdd100k/tracking/images/val/b1c9c847-3bda4659/'
-    n = 10
-    images = os.listdir(dir)
-    images_f = [dir + f for f in images][:n]
-    res = []
-    for i in range(n):
-        res.append(inference_model(model, images_f[i], frame_id=i))
-    # print(res)
-    # show_result_pyplot(model, images_f, bbox_result)
