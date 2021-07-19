@@ -139,6 +139,11 @@ But to report the results on BDD100K, evaluating with BDD100K-format is required
 - single node multiple GPU
 - multiple node
 
+Trained models for testing
+
+- [BDD100K model](https://drive.google.com/file/d/1YNAQgd8rMqqEG-fRj3VWlO4G5kdwJbxz/view?usp=sharing)
+- [TAO model](https://drive.google.com/file/d/1k8-QOEQ-xiEq6RB384VTSY6FyX2DSYNJ/view)
+
 You can use the following commands to test a dataset.
 
 ```shell
@@ -155,12 +160,12 @@ Optional arguments:
 - `--cfg-options`: If specified, some setting in the used config will be overridden.
 
 
-### Conver to the BDD100K format
+### Conversion to the Scalabel/BDD100K format
 
 We provide scripts to convert the output prediction into BDD100K format jsons and masks,
 which can be submitted to BDD100K codalabs to get the final performance.
 
-python tools/to_bdd.py ${CONFIG_FILE} [--res ${RESULT_FILE}] [--task ${EVAL_METRICS}] [--bdd-dir ${BDD_OUTPUT_DIR} --nproc ${PROCESS_NUM}] [--coco-file ${COCO_PRED_FILE}]
+python tools/to_bdd100k.py ${CONFIG_FILE} [--res ${RESULT_FILE}] [--task ${EVAL_METRICS}] [--bdd-dir ${BDD_OUTPUT_DIR} --nproc ${PROCESS_NUM}] [--coco-file ${COCO_PRED_FILE}]
 
 Optional arguments:
 - `RESULT_FILE`: Filename of the output results in pickle format.
