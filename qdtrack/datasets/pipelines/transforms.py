@@ -5,14 +5,18 @@ from mmdet.datasets.pipelines import Normalize, Pad, RandomFlip, Resize
 
 @PIPELINES.register_module()
 class SeqResize(Resize):
-
-    def __init__(self, *args, **kwargs):
+    def __init__(self, share_params=True, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.share_params = share_params
 
     def __call__(self, results):
-        outs = []
-        for _results in results:
+        outs, scale = [], None
+        for i, _results in enumerate(results):
+            if self.share_params and i > 0:
+                _results['scale'] = scale
             _results = super().__call__(_results)
+            if self.share_params and i == 0:
+                scale = _results['scale']
             outs.append(_results)
         return outs
 

@@ -159,21 +159,20 @@ class TaoTracker(object):
                     embeds,
                     memo_embeds,
                     method='dot_product',
-                    temperature=temperature,
-                    transpose=True)
+                    temperature=temperature)
                 cat_same = labels.view(-1, 1) == memo_labels.view(1, -1)
                 exps = torch.exp(sims) * cat_same.to(sims.device)
                 d2t_scores = exps / (exps.sum(dim=1).view(-1, 1) + 1e-6)
                 t2d_scores = exps / (exps.sum(dim=0).view(1, -1) + 1e-6)
                 cos_scores = cal_similarity(
-                    embeds, memo_embeds, method='cosine', transpose=True)
+                    embeds, memo_embeds, method='cosine')
                 cos_scores *= cat_same.to(cos_scores.device)
                 scores = (d2t_scores + t2d_scores) / 2
                 if self.match_with_cosine:
                     scores = (scores + cos_scores) / 2
             elif self.match_metric == 'cosine':
                 cos_scores = cal_similarity(
-                    embeds, memo_embeds, method='cosine', transpose=True)
+                    embeds, memo_embeds, method='cosine')
                 cat_same = labels.view(-1, 1) == memo_labels.view(1, -1)
                 scores = cos_scores * cat_same.float().to(cos_scores.device)
             else:
