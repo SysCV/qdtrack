@@ -165,7 +165,10 @@ Optional arguments:
 We provide scripts to convert the output prediction into BDD100K format jsons and masks,
 which can be submitted to BDD100K codalabs to get the final performance.
 
+
+```shell
 python tools/to_bdd100k.py ${CONFIG_FILE} [--res ${RESULT_FILE}] [--task ${EVAL_METRICS}] [--bdd-dir ${BDD_OUTPUT_DIR} --nproc ${PROCESS_NUM}] [--coco-file ${COCO_PRED_FILE}]
+```
 
 Optional arguments:
 - `RESULT_FILE`: Filename of the output results in pickle format.
