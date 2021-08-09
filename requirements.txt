@@ -1,5 +1,5 @@
-mmcv-full==1.2.7
-mmdet==2.10.0
+mmcv-full==1.3.10
+mmdet==2.14.0
 motmetrics
 numpy
 torch>=1.1
