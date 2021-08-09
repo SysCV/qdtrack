@@ -37,12 +37,6 @@ pip install mmdet==2.10.0
 
 You can also refer to the [offical instructions](https://github.com/open-mmlab/mmdetection/blob/master/docs/install.md).
 
-Note that mmdetection uses their forked version of pycocotools via the github repo instead of pypi for better compatibility. If you meet issues, you may need to re-install the cocoapi through
-```shell
-pip uninstall pycocotools
-pip install git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocotools
-```
-
 d. Install QDTrack
 ```shell
 python setup.py develop
