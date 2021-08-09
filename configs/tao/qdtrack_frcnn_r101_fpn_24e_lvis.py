@@ -1,5 +1,5 @@
 # model settings
-_base_ = './ft_qdtrack_frcnn_r50_fpn_24e_tao.py'
+_base_ = './ft_qdtrack_frcnn_r101_fpn_24e_tao.py'
 model = dict(
     type='QuasiDenseFasterRCNN',
     freeze_detector=False,
@@ -39,8 +39,9 @@ data = dict(
             type=dataset_type,
             classes='data/tao/annotations/tao_classes.txt',
             load_as_video=False,
-            ann_file='data/lvis/annotations/lvis-0.5_coco2017_train.json',
+            ann_file='data/lvis/annotations/lvis0.5+coco_train.json',
             img_prefix='data/lvis/train2017/',
             pipeline=train_pipeline)))
 # optimizer
 optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
+work_dir = './work_dirs/tao/qdtrack_frcnn_r101_fpn_24e_lvis'
