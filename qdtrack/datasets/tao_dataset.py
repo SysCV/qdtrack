@@ -5,7 +5,7 @@ import mmcv
 import numpy as np
 from mmcv.utils import print_log
 from mmdet.datasets import DATASETS
-from pycocotools.coco import COCO
+from .parsers import COCO
 
 from .coco_video_dataset import CocoVideoDataset
 from .parsers import CocoVID

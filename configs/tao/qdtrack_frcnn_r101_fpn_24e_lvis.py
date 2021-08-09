@@ -39,7 +39,7 @@ data = dict(
             type=dataset_type,
             classes='data/tao/annotations/tao_classes.txt',
             load_as_video=False,
-            ann_file='data/lvis/annotations/lvis0.5+coco_train.json',
+            ann_file='data/lvis/annotations/lvisv0.5+coco_train.json',
             img_prefix='data/lvis/train2017/',
             pipeline=train_pipeline)))
 # optimizer

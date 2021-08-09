@@ -1,7 +1,6 @@
 import numpy as np
 from collections import defaultdict
-from pycocotools.coco import COCO, _isArrayLike
-#from mmdet.datasets.api_wrappers import COCO
+from .coco_api import COCO
 from pycocotools.coco import _isArrayLike
 
 

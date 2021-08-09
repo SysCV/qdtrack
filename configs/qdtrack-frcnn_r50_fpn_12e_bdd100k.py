@@ -87,7 +87,7 @@ model = dict(
         match_metric='bisoftmax'),
 
     # model training and testing settings
-    train_cfg = dict(
+    train_cfg=dict(
         rpn=dict(
             assigner=dict(
                 type='MaxIoUAssigner',
@@ -108,9 +108,9 @@ model = dict(
             nms_across_levels=False,
             nms_pre=2000,
             nms_post=1000,
-            max_num=1000,
-            nms_thr=0.7,
-            min_bbox_size=0),
+            max_per_img=1000,
+            min_bbox_size=0,
+            nms=dict(type='nms', iou_threshold=0.7)),
         rcnn=dict(
             assigner=dict(
                 type='MaxIoUAssigner',
@@ -147,14 +147,13 @@ model = dict(
                     floor_thr=-1,
                     floor_fraction=0,
                     num_bins=3)))),
-
-    test_cfg = dict(
+    test_cfg=dict(
         rpn=dict(
             nms_across_levels=False,
             nms_pre=1000,
             nms_post=1000,
-            max_num=1000,
-            nms_thr=0.7,
+            max_per_img=1000,
+            nms=dict(type='nms', iou_threshold=0.7),
             min_bbox_size=0),
         rcnn=dict(
             score_thr=0.05,
@@ -210,21 +209,18 @@ data = dict(
         dict(
             type=dataset_type,
             load_as_video=False,
-            ann_file=data_root +
-            'labels/det_20/det_train_cocofmt.json',
+            ann_file=data_root + 'labels/det_20/det_train_cocofmt.json',
             img_prefix=data_root + 'images/100k/train/',
             pipeline=train_pipeline)
     ],
     val=dict(
         type=dataset_type,
-        ann_file=data_root +
-        'labels/box_track_20/box_track_val_cocofmt.json',
+        ann_file=data_root + 'labels/box_track_20/box_track_val_cocofmt.json',
         img_prefix=data_root + 'images/track/val/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root +
-        'labels/box_track_20/box_track_val_cocofmt.json',
+        ann_file=data_root + 'labels/box_track_20/box_track_val_cocofmt.json',
         img_prefix=data_root + 'images/track/val/',
         pipeline=test_pipeline))
 # optimizer
