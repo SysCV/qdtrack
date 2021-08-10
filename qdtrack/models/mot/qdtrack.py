@@ -8,12 +8,7 @@ from ..builder import MODELS, build_tracker
 @MODELS.register_module()
 class QDTrack(TwoStageDetector):
 
-    def __init__(self,
-                 tracker=None,
-                 freeze_detector=False,
-                 is_tao=False,
-                 *args,
-                 **kwargs):
+    def __init__(self, tracker=None, freeze_detector=False, *args, **kwargs):
         self.prepare_cfg(kwargs)
         super().__init__(*args, **kwargs)
         self.tracker_cfg = tracker
@@ -21,7 +16,6 @@ class QDTrack(TwoStageDetector):
         self.freeze_detector = freeze_detector
         if self.freeze_detector:
             self._freeze_detector()
-        self.is_tao = is_tao
 
     def _freeze_detector(self):
 
@@ -107,11 +101,8 @@ class QDTrack(TwoStageDetector):
                                   self.roi_head.bbox_head.num_classes)
 
         if track_feats is not None:
-            if self.is_tao:
-                track_result = track2result(
-                    bboxes, labels, ids, self.roi_head.bbox_head.num_classes)
-            else:
-                track_result = track2result(bboxes, labels, ids)
+            track_result = track2result(bboxes, labels, ids,
+                                        self.roi_head.bbox_head.num_classes)
         else:
             from collections import defaultdict
             track_result = defaultdict(list)
