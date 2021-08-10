@@ -1,289 +1,222 @@
 import time
-from collections import defaultdict
+from multiprocessing import Pool
 
 import motmetrics as mm
 import numpy as np
 import pandas as pd
+from mmcv.utils import print_log
+from mmdet.core import bbox2result
+from mmdet.core.evaluation.bbox_overlaps import bbox_overlaps
 from motmetrics.lap import linear_sum_assignment
 from motmetrics.math_util import quiet_divide
 
-# note that there is no +1
+from ..track import track2result
+
+METRIC_MAPS = {
+    'idf1': 'IDF1',
+    'mota': 'MOTA',
+    'motp': 'MOTP',
+    'num_false_positives': 'FP',
+    'num_misses': 'FN',
+    'num_switches': 'IDSw',
+    'recall': 'Rcll',
+    'precision': 'Prcn',
+    'mostly_tracked': 'MT',
+    'partially_tracked': 'PT',
+    'mostly_lost': 'ML',
+    'num_fragmentations': 'FM'
+}
 
 
-def xyxy2xywh(bbox):
-    return [
-        bbox[0],
-        bbox[1],
-        bbox[2] - bbox[0],
-        bbox[3] - bbox[1],
+def bbox_distances(bboxes1, bboxes2, iou_thr=0.5):
+    """Calculate the IoU distances of two sets of boxes."""
+    ious = bbox_overlaps(bboxes1, bboxes2, mode='iou')
+    distances = 1 - ious
+    distances = np.where(distances > iou_thr, np.nan, distances)
+    return distances
+
+
+def acc_single_video(results,
+                     gts,
+                     iou_thr=0.5,
+                     ignore_iof_thr=0.5,
+                     ignore_by_classes=False):
+    """Accumulate results in a single video."""
+    num_classes = len(results[0])
+    accumulators = [
+        mm.MOTAccumulator(auto_id=True) for i in range(num_classes)
     ]
+    for result, gt in zip(results, gts):
+        if ignore_by_classes:
+            gt_ignore = bbox2result(gt['bboxes_ignore'], gt['labels_ignore'],
+                                    num_classes)
+        else:
+            gt_ignore = [gt['bboxes_ignore'] for i in range(num_classes)]
+        gt = track2result(gt['bboxes'], gt['labels'], gt['instance_ids'],
+                          num_classes)
+        for i in range(num_classes):
+            gt_ids, gt_bboxes = gt[i][:, 0].astype(np.int), gt[i][:, 1:]
+            pred_ids, pred_bboxes = result[i][:, 0].astype(
+                np.int), result[i][:, 1:-1]
+            dist = bbox_distances(gt_bboxes, pred_bboxes, iou_thr)
+            if gt_ignore[i].shape[0] > 0:
+                # 1. assign gt and preds
+                fps = np.ones(pred_bboxes.shape[0]).astype(np.bool)
+                row, col = linear_sum_assignment(dist)
+                for m, n in zip(row, col):
+                    if not np.isfinite(dist[m, n]):
+                        continue
+                    fps[n] = False
+                # 2. ignore by iof
+                iofs = bbox_overlaps(pred_bboxes, gt_ignore[i], mode='iof')
+                ignores = (iofs > ignore_iof_thr).any(axis=1)
+                # 3. filter preds
+                valid_inds = ~(fps & ignores)
+                pred_ids = pred_ids[valid_inds]
+                dist = dist[:, valid_inds]
+            if dist.shape != (0, 0):
+                accumulators[i].update(gt_ids, pred_ids, dist)
+    return accumulators
 
 
-# 1: person, 2: vehicle, 3: bike
-super_category_map = {1: 1, 2: 1, 3: 2, 4: 2, 5: 2, 6: 3, 7: 3, 8: 2}
-
-
-def intersection_over_area(preds, gts):
-    """Returns the intersection over the area of the predicted box."""
-    out = np.zeros((len(preds), len(gts)))
-    for i, p in enumerate(preds):
-        for j, g in enumerate(gts):
-            x1, x2 = max(p[0], g[0]), min(p[0] + p[2], g[0] + g[2])
-            y1, y2 = max(p[1], g[1]), min(p[1] + p[3], g[1] + g[3])
-            out[i][j] = max(x2 - x1, 0) * max(y2 - y1, 0) / float(p[2] * p[3])
-
-    return out
-
-
-def preprocessResult(res, anns, cats_mapping, crowd_ioa_thr=0.5):
-    """Preprocesses data for utils.CLEAR_MOT_M.
-
-    Returns a subset of the predictions.
-    """
-    # pylint: disable=too-many-locals
-
-    # fast indexing
-    annsByAttr = defaultdict(lambda: defaultdict(list))
-
-    for i, bbox in enumerate(anns['annotations']):
-        annsByAttr[bbox['image_id']][cats_mapping[bbox['category_id']]].append(
-            i)
-
-    dropped_gt_ids = set()
-    dropped_gts = []
-    print('Results before drop:', sum([len(i) for i in res]))
-    # match
-    for (r, img) in zip(res, anns['images']):
-        anns_in_frame = [
-            anns['annotations'][i] for v in annsByAttr[img['id']].values()
-            for i in v
-        ]
-        gt_bboxes = [a['bbox'] for a in anns_in_frame if not a['iscrowd']]
-        res_bboxes = [xyxy2xywh(v['bbox'][:-1]) for v in r.values()]
-        res_ids = list(r.keys())
-
-        dropped_pred = []
-
-        # drop preds that match with ignored labels
-        dist = mm.distances.iou_matrix(gt_bboxes, res_bboxes, max_iou=0.5)
-        le, ri = linear_sum_assignment(dist)
-
-        ignore_gt = [
-            a.get('ignore', False) for a in anns_in_frame if not a['iscrowd']
-        ]
-        fp_ids = set(res_ids)
-        for i, j in zip(le, ri):
-            if not np.isfinite(dist[i, j]):
+def aggregate_accs(accumulators, classes):
+    """Aggregate results from each class."""
+    # accs for each class
+    items = list(classes)
+    names, accs = [[] for c in classes], [[] for c in classes]
+    for video_ind, _accs in enumerate(accumulators):
+        for cls_ind, acc in enumerate(_accs):
+            if len(acc._events['Type']) == 0:
                 continue
-            fp_ids.remove(res_ids[j])
-            if ignore_gt[i]:
-                # remove from results
-                dropped_gt_ids.add(anns_in_frame[i]['id'])
-                dropped_pred.append(res_ids[j])
-                dropped_gts.append(i)
+            name = f'{classes[cls_ind]}_{video_ind}'
+            names[cls_ind].append(name)
+            accs[cls_ind].append(acc)
 
-        # drop fps that fall in crowd regions
-        crowd_gt_labels = [a['bbox'] for a in anns_in_frame if a['iscrowd']]
+    # overall
+    items.append('OVERALL')
+    names.append([n for name in names for n in name])
+    accs.append([a for acc in accs for a in acc])
 
-        if len(crowd_gt_labels) > 0 and len(fp_ids) > 0:
-            ioas = np.max(
-                intersection_over_area(
-                    [xyxy2xywh(r[k]['bbox'][:-1]) for k in fp_ids],
-                    crowd_gt_labels),
-                axis=1)
-            for i, ioa in zip(fp_ids, ioas):
-                if ioa > crowd_ioa_thr:
-                    dropped_pred.append(i)
-
-        for p in dropped_pred:
-            del r[p]
-
-    print('Results after drop:', sum([len(i) for i in res]))
+    return names, accs, items
 
 
-def aggregate_eval_results(summary,
-                           metrics,
-                           cats,
-                           mh,
-                           generate_overall=True,
-                           class_average=False):
-    if generate_overall and not class_average:
-        cats.append('OVERALL')
-    new_summary = pd.DataFrame(columns=metrics)
-    for cat in cats:
-        s = summary[summary.index.str.startswith(
-            str(cat))] if cat != 'OVERALL' else summary
-        res_sum = s.sum()
-        new_res = []
-        for metric in metrics:
-            if metric == 'mota':
-                res = 1. - quiet_divide(
-                    res_sum['num_misses'] + res_sum['num_switches'] +
-                    res_sum['num_false_positives'], res_sum['num_objects'])
-            elif metric == 'motp':
-                res = quiet_divide((s['motp'] * s['num_detections']).sum(),
-                                   res_sum['num_detections'])
-            elif metric == 'idf1':
-                res = quiet_divide(
-                    2 * res_sum['idtp'],
-                    res_sum['num_objects'] + res_sum['num_predictions'])
-            else:
-                res = res_sum[metric]
-            new_res.append(res)
-        new_summary.loc[cat] = new_res
-
-    new_summary['motp'] = (1 - new_summary['motp']) * 100
-
-    if generate_overall and class_average:
-        new_res = []
-        res_average = new_summary.fillna(0).mean()
-        res_sum = new_summary.sum()
-        for metric in metrics:
-            if metric in ['mota', 'motp', 'idf1']:
-                new_res.append(res_average[metric])
-            else:
-                new_res.append(res_sum[metric])
-        new_summary.loc['OVERALL'] = new_res
-
-    dtypes = [
-        'float' if m in ['mota', 'motp', 'idf1'] else 'int' for m in metrics
-    ]
-    dtypes = {m: d for m, d in zip(metrics, dtypes)}
-    new_summary = new_summary.astype(dtypes)
-
-    strsummary = mm.io.render_summary(
-        new_summary,
-        formatters=mh.formatters,
-        namemap={
-            'mostly_tracked': 'MT',
-            'mostly_lost': 'ML',
-            'num_false_positives': 'FP',
-            'num_misses': 'FN',
-            'num_switches': 'IDs',
-            'mota': 'MOTA',
-            'motp': 'MOTP',
-            'idf1': 'IDF1'
-        })
-    print(strsummary)
-    return new_summary
-
-
-def eval_mot(anns, all_results, split_camera=False, class_average=False):
-    print('Evaluating BDD Results...')
-    assert len(all_results) == len(anns['images'])
-    t = time.time()
-
-    cats_mapping = {k['id']: k['id'] for k in anns['categories']}
-
-    preprocessResult(all_results, anns, cats_mapping)
-    anns['annotations'] = [
-        a for a in anns['annotations']
-        if not (a['iscrowd'] or a.get('ignore', False))
-    ]
-
-    # fast indexing
-    annsByAttr = defaultdict(lambda: defaultdict(list))
-
-    for i, bbox in enumerate(anns['annotations']):
-        annsByAttr[bbox['image_id']][cats_mapping[bbox['category_id']]].append(
-            i)
-
-    track_acc = defaultdict(lambda: defaultdict())
-    global_instance_id = 0
-    num_instances = 0
-    cat_ids = np.unique(list(cats_mapping.values()))
-    video_camera_mapping = dict()
-    for cat_id in cat_ids:
-        for video in anns['videos']:
-            track_acc[cat_id][video['id']] = mm.MOTAccumulator(auto_id=True)
-            if split_camera:
-                video_camera_mapping[video['id']] = video['camera_id']
-
-    for img, results in zip(anns['images'], all_results):
-        img_id = img['id']
-
-        if img['frame_id'] == 0:
-            global_instance_id += num_instances
-        if len(list(results.keys())) > 0:
-            num_instances = max([int(k) for k in results.keys()]) + 1
-
-        pred_bboxes, pred_ids = defaultdict(list), defaultdict(list)
-        for instance_id, result in results.items():
-            _bbox = xyxy2xywh(result['bbox'])
-            _cat = cats_mapping[result['label'] + 1]
-            pred_bboxes[_cat].append(_bbox)
-            instance_id = int(instance_id) + global_instance_id
-            pred_ids[_cat].append(instance_id)
-
-        gt_bboxes, gt_ids = defaultdict(list), defaultdict(list)
-        for cat_id in cat_ids:
-            for i in annsByAttr[img_id][cat_id]:
-                ann = anns['annotations'][i]
-                gt_bboxes[cat_id].append(ann['bbox'])
-                gt_ids[cat_id].append(ann['instance_id'])
-            distances = mm.distances.iou_matrix(
-                gt_bboxes[cat_id], pred_bboxes[cat_id], max_iou=0.5)
-            track_acc[cat_id][img['video_id']].update(gt_ids[cat_id],
-                                                      pred_ids[cat_id],
-                                                      distances)
-
-    # eval for track
-    print('Generating matchings and summary...')
-    empty_cat = []
-    for cat, video_track_acc in track_acc.items():
-        for vid, v in video_track_acc.items():
-            if len(v._events) == 0:
-                empty_cat.append([cat, vid])
-    for cat, vid in empty_cat:
-        track_acc[cat].pop(vid)
-
-    names, acc = [], []
-    for cat, video_track_acc in track_acc.items():
-        for vid, v in video_track_acc.items():
-            name = '{}_{}'.format(cat, vid)
-            if split_camera:
-                name += '_{}'.format(video_camera_mapping[vid])
-            names.append(name)
-            acc.append(v)
-
-    metrics = [
-        'mota', 'motp', 'num_misses', 'num_false_positives', 'num_switches',
-        'mostly_tracked', 'mostly_lost', 'idf1'
-    ]
-
-    print('Evaluating box tracking...')
+def eval_single_class(names, accs):
+    """Evaluate CLEAR MOT results for each class."""
     mh = mm.metrics.create()
     summary = mh.compute_many(
-        acc,
-        metrics=[
-            'num_objects', 'motp', 'num_detections', 'num_misses',
-            'num_false_positives', 'num_switches', 'mostly_tracked',
-            'mostly_lost', 'idtp', 'num_predictions'
-        ],
-        names=names,
-        generate_overall=False)
-    if split_camera:
-        summary['camera_id'] = summary.index.str.split('_').str[-1]
-        for camera_id, summary_ in summary.groupby('camera_id'):
-            print('\nEvaluating camera ID: ', camera_id)
-            aggregate_eval_results(
-                summary_,
-                metrics,
-                list(track_acc.keys()),
-                mh,
-                generate_overall=True,
-                class_average=class_average)
+        accs, names=names, metrics=METRIC_MAPS.keys(), generate_overall=True)
+    results = [v['OVERALL'] for k, v in summary.to_dict().items()]
+    motp_ind = list(METRIC_MAPS).index('motp')
+    if np.isnan(results[motp_ind]):
+        num_dets = mh.compute_many(
+            accs,
+            names=names,
+            metrics=['num_detections'],
+            generate_overall=True)
+        sum_motp = (summary['motp'] * num_dets['num_detections']).sum()
+        motp = quiet_divide(sum_motp, num_dets['num_detections']['OVERALL'])
+        results[motp_ind] = float(1 - motp)
+    else:
+        results[motp_ind] = 1 - results[motp_ind]
+    return results
 
-    print('\nEvaluating overall results...')
-    summary = aggregate_eval_results(
-        summary,
-        metrics,
-        list(track_acc.keys()),
-        mh,
-        generate_overall=True,
-        class_average=class_average)
 
-    print('Evaluation finsihes with {:.2f} s'.format(time.time() - t))
+def eval_mot(results,
+             annotations,
+             logger=None,
+             classes=None,
+             iou_thr=0.5,
+             ignore_iof_thr=0.5,
+             ignore_by_classes=False,
+             nproc=4):
+    """Evaluation CLEAR MOT metrics.
 
-    out = {k: v for k, v in summary.to_dict().items()}
+    Args:
+        results (list[list[list[ndarray]]]): The first list indicates videos,
+            The second list indicates images. The third list indicates
+            categories. The ndarray indicates the tracking results.
+        annotations (list[list[dict]]): The first list indicates videos,
+            The second list indicates images. The third list indicates
+            the annotations of each video. Keys of annotations are
+
+            - `bboxes`: numpy array of shape (n, 4)
+            - `labels`: numpy array of shape (n, )
+            - `instance_ids`: numpy array of shape (n, )
+            - `bboxes_ignore` (optional): numpy array of shape (k, 4)
+            - `labels_ignore` (optional): numpy array of shape (k, )
+        logger (logging.Logger | str | None, optional): The way to print the
+            evaluation results. Defaults to None.
+        classes (list, optional): Classes in the dataset. Defaults to None.
+        iou_thr (float, optional): IoU threshold for evaluation.
+            Defaults to 0.5.
+        ignore_iof_thr (float, optional): Iof threshold to ignore results.
+            Defaults to 0.5.
+        ignore_by_classes (bool, optional): Whether ignore the results by
+            classes or not. Defaults to False.
+        nproc (int, optional): Number of the processes. Defaults to 4.
+
+    Returns:
+        dict[str, float]: Evaluation results.
+    """
+    print_log('---CLEAR MOT Evaluation---', logger)
+    t = time.time()
+    gts = annotations.copy()
+    if classes is None:
+        classes = [i + 1 for i in range(len(results[0]))]
+    assert len(results) == len(gts)
+    metrics = METRIC_MAPS.keys()
+
+    print_log('Accumulating...', logger)
+
+    pool = Pool(nproc)
+    accs = pool.starmap(
+        acc_single_video,
+        zip(results, gts, [iou_thr for _ in range(len(gts))],
+            [ignore_iof_thr for _ in range(len(gts))],
+            [ignore_by_classes for _ in range(len(gts))]))
+    names, accs, items = aggregate_accs(accs, classes)
+    print_log('Evaluating...', logger)
+    eval_results = pd.DataFrame(columns=metrics)
+    summaries = pool.starmap(eval_single_class, zip(names, accs))
+    pool.close()
+
+    # category and overall results
+    for i, item in enumerate(items):
+        eval_results.loc[item] = summaries[i]
+
+    dtypes = {m: type(d) for m, d in zip(metrics, summaries[0])}
+    # average results
+    avg_results = []
+    for i, m in enumerate(metrics):
+        v = np.array([s[i] for s in summaries[:len(classes)]])
+        v = np.nan_to_num(v, nan=0)
+        if dtypes[m] == int:
+            avg_results.append(int(v.sum()))
+        elif dtypes[m] == float:
+            avg_results.append(float(v.mean()))
+        else:
+            raise TypeError()
+    eval_results.loc['AVERAGE'] = avg_results
+    eval_results = eval_results.astype(dtypes)
+
+    print_log('Rendering...', logger)
+    strsummary = mm.io.render_summary(
+        eval_results,
+        formatters=mm.metrics.create().formatters,
+        namemap=METRIC_MAPS)
+
+    print_log('\n' + strsummary, logger)
+    print_log(f'Evaluation finishes with {(time.time() - t):.2f} s.', logger)
+
+    eval_results = eval_results.to_dict()
+    out = {METRIC_MAPS[k]: v['OVERALL'] for k, v in eval_results.items()}
+    for k, v in out.items():
+        out[k] = float(f'{(v):.3f}') if isinstance(v, float) else int(f'{v}')
+    for m in ['OVERALL', 'AVERAGE']:
+        out[f'track_{m}_copypaste'] = ''
+        for k in METRIC_MAPS.keys():
+            v = eval_results[k][m]
+            v = f'{(v):.3f} ' if isinstance(v, float) else f'{v} '
+            out[f'track_{m}_copypaste'] += v
+
     return out
