@@ -3,6 +3,7 @@ from mmdet.models import TwoStageDetector
 
 from qdtrack.core import track2result
 from ..builder import MODELS, build_tracker
+from qdtrack.core import imshow_tracks, restore_result
 
 
 @MODELS.register_module()
@@ -107,3 +108,51 @@ class QDTrack(TwoStageDetector):
             from collections import defaultdict
             track_result = defaultdict(list)
         return dict(bbox_result=bbox_result, track_result=track_result)
+
+    def show_result(self,
+                    img,
+                    result,
+                    thickness=1,
+                    font_scale=0.5,
+                    show=False,
+                    out_file=None,
+                    wait_time=0,
+                    backend='cv2',
+                    **kwargs):
+        """Visualize tracking results.
+
+        Args:
+            img (str | ndarray): Filename of loaded image.
+            result (dict): Tracking result.
+                The value of key 'track_results' is ndarray with shape (n, 6)
+                in [id, tl_x, tl_y, br_x, br_y, score] format.
+                The value of key 'bbox_results' is ndarray with shape (n, 5)
+                in [tl_x, tl_y, br_x, br_y, score] format.
+            thickness (int, optional): Thickness of lines. Defaults to 1.
+            font_scale (float, optional): Font scales of texts. Defaults
+                to 0.5.
+            show (bool, optional): Whether show the visualizations on the
+                fly. Defaults to False.
+            out_file (str | None, optional): Output filename. Defaults to None.
+            backend (str, optional): Backend to draw the bounding boxes,
+                options are `cv2` and `plt`. Defaults to 'cv2'.
+
+        Returns:
+            ndarray: Visualized image.
+        """
+        assert isinstance(result, dict)
+        track_result = result.get('track_results', None)
+        bboxes, labels, ids = restore_result(track_result, return_ids=True)
+        img = imshow_tracks(
+            img,
+            bboxes,
+            labels,
+            ids,
+            classes=self.CLASSES,
+            thickness=thickness,
+            font_scale=font_scale,
+            show=show,
+            out_file=out_file,
+            wait_time=wait_time,
+            backend=backend)
+        return img
