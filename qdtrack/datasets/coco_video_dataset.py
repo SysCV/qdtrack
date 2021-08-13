@@ -124,7 +124,7 @@ class CocoVideoDataset(CocoDataset):
         return results, ref_results
 
     def _match_gts(self, ann, ref_ann):
-        if ann.get('instance_ids', False):
+        if 'instance_ids' in ann:
             ins_ids = list(ann['instance_ids'])
             ref_ins_ids = list(ref_ann['instance_ids'])
             match_indices = np.array([

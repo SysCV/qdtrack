@@ -22,7 +22,7 @@ class MOT17Dataset(CocoVideoDataset):
                  visibility_thr=-1,
                  track_visibility_thr=-1,
                  detection_file=None,
-                 *args,s
+                 *args,
                  **kwargs):
         super().__init__(*args, **kwargs)
         self.visibility_thr = visibility_thr
