@@ -3,7 +3,7 @@
 
 #### 1. Prepare the data
 
-Please refer to [GET_STARTED](GET_STARTED.md) to prepare the TAO dataset. 
+Please refer to [GET_STARTED](../docs/GET_STARTED.md) to prepare the TAO dataset. 
 Remember to rename the folder name of `annotations_v**` to `annotations`.
 
 Please also prepare the LVIS dataset.
