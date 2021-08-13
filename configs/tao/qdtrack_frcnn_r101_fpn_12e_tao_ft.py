@@ -23,9 +23,10 @@ train_pipeline = [
         keys=['img', 'gt_bboxes', 'gt_labels', 'gt_match_indices'],
         ref_prefix='ref'),
 ]
+dataset_type = 'TaoDataset'
 data = dict(
-    samples_per_gpu=1,
-    workers_per_gpu=1,
+    samples_per_gpu=2,
+    workers_per_gpu=2,
     train=dict(
         _delete_=True,
         type='ClassBalancedDataset',
@@ -33,10 +34,19 @@ data = dict(
         dataset=dict(
             type=dataset_type,
             classes='data/tao/annotations/tao_classes.txt',
-            ann_file='data/tao/annotations/train_ours.json',
+            ann_file='data/tao/annotations/train_482_ours.json',
             img_prefix='data/tao/frames/',
             key_img_sampler=dict(interval=1),
             ref_img_sampler=dict(num_ref_imgs=1, scope=1, method='uniform'),
             pipeline=train_pipeline)))
-# optimizer
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.002, momentum=0.9, weight_decay=0.0001)
+lr_config = dict(
+    policy='step',
+    warmup='linear',
+    warmup_iters=1000,
+    warmup_ratio=1.0 / 1000,
+    step=[8, 11])
+total_epochs = 12
+load_from = 'ckpts/tao/qdtrack_r101_fpn_24e_pretrain-lvis+coco_20210811_132004-dc63f8a0.pth'
+evaluation = dict(metric=['track'], start=1, interval=1)
+work_dir = './work_dirs/tao/qdtrack_frcnn_r101_fpn_24e_tao_ft'
