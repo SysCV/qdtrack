@@ -62,7 +62,7 @@ Please refer to [GET_STARTED.md](docs/GET_STARTED.md) for dataset preparation an
 Trained models for testing
 
 - [BDD100K model](https://drive.google.com/file/d/1YNAQgd8rMqqEG-fRj3VWlO4G5kdwJbxz/view?usp=sharing)
-- [TAO model](https://drive.google.com/file/d/1k8-QOEQ-xiEq6RB384VTSY6FyX2DSYNJ/view)
+- [TAO model](https://drive.google.com/file/d/1JtZ9UA0-b9LDor1NHtk8A-g83X7-T89X/view?usp=sharing)
 
 More implementations / models on the following benchmarks will be released later
 
