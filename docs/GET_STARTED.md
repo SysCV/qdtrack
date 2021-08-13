@@ -14,8 +14,7 @@ On the offical download page, the required data and annotations are
 - `tracking` set images: `MOT 2020 Data`
 - `tracking` set annotations: `MOT 2020 Labels`
 
-#### Download TAO
-Please follow [TAO download](https://github.com/TAO-Dataset/tao/blob/master/docs/download.md) instructions.
+
 
 
 #### Convert annotations
@@ -70,12 +69,6 @@ Our folder structure follows
 │   │   ├── labels 
 │   │   │   ├── box_track_20
 │   │   │   ├── det_20
-    ├── tao
-        ├── frames
-            ├── train
-            ├── val
-            ├── test
-        ├── annotations
 
 ```
 

@@ -1,14 +1,34 @@
-### Experiments on TAO Dataset
+## Experiments on TAO Dataset
 
 
-#### 1. Prepare the data
+### 1. Download the data
+a. Please follow [TAO download](https://github.com/TAO-Dataset/tao/blob/master/docs/download.md) instructions.
 
-Please refer to [GET_STARTED](../../docs/GET_STARTED.md) to prepare the TAO dataset. 
-Remember to rename the folder name of `annotations_v**` to `annotations`.
+b. Please also prepare the [LVIS dataset](https://www.lvisdataset.org/).
 
-Please also prepare the LVIS dataset.
+It is recommended to symlink the dataset root to `$QDTrack/data`.
 
-#### 2. Install the TAO API
+If your folder structure is different, you may need to change the corresponding paths in config files.
+
+Our folder structure follows
+
+```
+├── qdtrack
+├── tools
+├── configs
+├── data
+    ├── tao
+        ├── frames
+            ├── train
+            ├── val
+            ├── test
+        ├── annotations
+    ├── lvis
+        ├── train2017
+        ├── annotations    
+```
+
+### 2. Install the TAO API
 
 ```shell
 pip install git+https://github.com/OceanPang/tao.git
@@ -16,20 +36,20 @@ pip install git+https://github.com/OceanPang/tao.git
 
 We fork the TAO API to make the logger compatabile with our codebase. 
 
-We also print the AP of main classes such as person for reference. 
+We also print the AP of main classes such as "person" for reference. 
 
-#### 2. Generate our annotation files
+### 3. Generate our annotation files
 
 a. Generate TAO annotation files with 482 classes.
 ```shell
 python tools/convert_datasets/tao2coco.py -t ./data/tao/annotations --filter-classes
 ```
 
-b. Merge LVIS and COCO datasets to train detectors.
+b. Merge LVIS and COCO training sets.
 
 Use the `merge_coco_with_lvis.py` script in [the offical TAO API](https://github.com/TAO-Dataset/tao/blob/master/scripts/detectors/merge_coco_with_lvis.py).
 
-This operation follows the practices in [TAO](https://taodataset.org/) with LVIS v0.5.
+This operation follows the paper [TAO](https://taodataset.org/).
 
 ```shell
 cd ${TAP_API}
@@ -38,9 +58,9 @@ python ./scripts/detectors/merge_coco_with_lvis.py --lvis ${LVIS_PATH}/annotatio
 
 You can also get the merged annotation file from [Google Drive](https://drive.google.com/file/d/1v_q0eWpKgVDMvmjQ8pBKPgHQQ8SLhLx0/view?usp=sharing) or [Baidu Yun](https://pan.baidu.com/s/1XnwJ5FqsA_neV0MSXu42hg) (passcode: rkh2).
 
-#### 3. Pre-train the model on LVIS dataset
+### 4. Pre-train the model on LVIS dataset
 
-a. You should first pre-train our QDTrack on LVISv0.5+COCO2017 training set.
+a. Pre-train our QDTrack on LVISv0.5+COCO2017 training set.
 
 ```shell
 sh ./tools/dist_train.sh ./configs/tao/qdtrack_frcnn_r101_fpn_24e_lvis.py 8
@@ -57,7 +77,7 @@ Here is a checkpoint at [Google Drive](https://drive.google.com/file/d/1XYe4BiYb
 b. Save the runned model to `ckpts/tao/**.pth`, and modify the configs for TAO accordingly.
 
 
-#### 4. Fine-tune the model on TAO dataset
+### 5. Fine-tune the model on TAO dataset
 
 ```shell
 sh ./tools/dist_train.sh ./configs/tao/qdtrack_frcnn_r101_fpn_12e_tao_ft.py 8
