@@ -1,6 +1,7 @@
 # Getting Started
 This page provides basic tutorials about the usage of QDTrack. For installation instructions, please see [INSTALL.md](INSTALL.md).
 
+This document is based on BDD100K dataset. For usages on the other datasets, please refer to [TAO](../configs/tao/README.md).
 ## Prepare Datasets
 
 #### Download BDD100K
@@ -13,9 +14,6 @@ On the offical download page, the required data and annotations are
 - `detection` set annotations: `Detection 2020 Labels`
 - `tracking` set images: `MOT 2020 Data`
 - `tracking` set annotations: `MOT 2020 Labels`
-
-
-
 
 #### Convert annotations
 
@@ -39,13 +37,6 @@ python -m bdd100k.label.to_coco -m box_track -l bdd100k/labels/box_track_20/${SE
 ```
 
 The `${SET_NAME}` here can be one of ['train', 'val'].
-
-##### TAO
-You should first install [TAO toolkit](https://github.com/TAO-Dataset/tao)
-To convert the TAO set. You can do as:
-```bash
-python tools/tao2coco.py -tao data/tao/annotations/ 
-```
 
 #### Symlink the data
 
@@ -119,9 +110,6 @@ If you use `dist_train.sh` to launch training jobs, you can set the port in comm
 CUDA_VISIBLE_DEVICES=0,1,2,3 PORT=29500 ./tools/dist_train.sh ${CONFIG_FILE} 4
 CUDA_VISIBLE_DEVICES=4,5,6,7 PORT=29501 ./tools/dist_train.sh ${CONFIG_FILE} 4
 ```
-#### Train TAO model
-Please note that for training qdtrack on TAO. You need first to get a pre_trained object detector on LVISv0.5.
-We offer one [here](https://drive.google.com/file/d/1ndUFC9VOI_dzfJB1nKgiokuYRSjGjhQ5/view?usp=sharing). You may replace the detector with other detectors that you prefer.
 
 ### Test a Model with COCO-format
 
