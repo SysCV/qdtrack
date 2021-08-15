@@ -35,7 +35,7 @@ model = dict(
                     floor_fraction=0,
                     num_bins=3)))))
 # dataset settings
-dataset_type = 'CocoVideoDataset'
+dataset_type = 'MOT17Dataset'
 data_root = 'data/MOT17/'
 img_norm_cfg = dict(
     mean=[103.530, 116.280, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)
@@ -84,6 +84,7 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
+        classes=['pedestrian'],
         visibility_thr=-1,
         track_visibility_thr=-1,
         ann_file='data/MOT17/annotations/half-train_cocoformat.json',
