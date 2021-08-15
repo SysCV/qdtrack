@@ -20,20 +20,7 @@ model = dict(
         with_cats=True,
         match_metric='bisoftmax'),
     # model training and testing settings
-    train_cfg=dict(
-        embed=dict(
-            sampler=dict(
-                type='CombinedSampler',
-                num=256,
-                pos_fraction=0.5,
-                neg_pos_ub=3,
-                add_gt_as_proposals=True,
-                pos_sampler=dict(type='InstanceBalancedPosSampler'),
-                neg_sampler=dict(
-                    type='IoUBalancedNegSampler',
-                    floor_thr=-1,
-                    floor_fraction=0,
-                    num_bins=3)))))
+    train_cfg=dict(embed=dict(assigner=dict(neg_iou_thr=0.5))))
 # dataset settings
 dataset_type = 'MOT17Dataset'
 data_root = 'data/MOT17/'
@@ -106,7 +93,7 @@ data = dict(
         ref_img_sampler=None,
         pipeline=test_pipeline))
 # optimizer
-optimizer = dict(type='SGD', lr=0.002, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
 lr_config = dict(policy='step', step=[3])
