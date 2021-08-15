@@ -35,7 +35,7 @@ model = dict(
                     floor_fraction=0,
                     num_bins=3)))))
 # dataset settings
-dataset_type = 'MOT17Dataset'
+dataset_type = 'CocoVideoDataset'
 data_root = 'data/MOT17/'
 img_norm_cfg = dict(
     mean=[103.530, 116.280, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)
@@ -93,7 +93,7 @@ data = dict(
     val=dict(
         type=dataset_type,
         ann_file='data/MOT17/annotations/half-val_cocoformat.json',
-        classes=['person'],
+        classes=['pedestrian'],
         img_prefix='data/MOT17/train/',
         ref_img_sampler=None,
         pipeline=test_pipeline),
@@ -101,6 +101,7 @@ data = dict(
         type=dataset_type,
         ann_file='data/MOT17/annotations/half-val_cocoformat.json',
         img_prefix='data/MOT17/train/',
+        classes=['pedestrian'],
         ref_img_sampler=None,
         pipeline=test_pipeline))
 # optimizer

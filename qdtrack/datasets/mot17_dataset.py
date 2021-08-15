@@ -158,8 +158,8 @@ class MOT17Dataset(CocoVideoDataset):
 
         for i in range(num_vids):
             for metric in metrics:
-                formatter = getattr(self, f'format_{metric}_result')
-                formatter(results[f'{metric}_result'][inds[i]:inds[i + 1]],
+                formatter = getattr(self, f'format_{metric}_results')
+                formatter(results[f'{metric}_results'][inds[i]:inds[i + 1]],
                           self.data_infos[inds[i]:inds[i + 1]],
                           f'{resfiles[metric]}/{names[i]}.txt')
 
@@ -192,7 +192,7 @@ class MOT17Dataset(CocoVideoDataset):
                  results,
                  metric='track',
                  logger=None,
-                 resfile_path='./mot/',
+                 resfile_path=None,
                  bbox_iou_thr=0.5,
                  track_iou_thr=0.5):
         eval_results = dict()

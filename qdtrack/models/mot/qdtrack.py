@@ -107,7 +107,7 @@ class QDTrack(TwoStageDetector):
         else:
             from collections import defaultdict
             track_result = defaultdict(list)
-        return dict(bbox_result=bbox_result, track_result=track_result)
+        return dict(bbox_results=bbox_result, track_results=track_result)
 
     def show_result(self,
                     img,
