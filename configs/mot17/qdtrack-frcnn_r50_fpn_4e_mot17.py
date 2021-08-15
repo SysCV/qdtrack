@@ -81,7 +81,7 @@ test_pipeline = [
 ]
 data = dict(
     samples_per_gpu=2,
-    workers_per_gpu=0,
+    workers_per_gpu=2,
     train=dict(
         type=dataset_type,
         visibility_thr=-1,
@@ -93,6 +93,7 @@ data = dict(
     val=dict(
         type=dataset_type,
         ann_file='data/MOT17/annotations/half-val_cocoformat.json',
+        classes=['person'],
         img_prefix='data/MOT17/train/',
         ref_img_sampler=None,
         pipeline=test_pipeline),
@@ -124,6 +125,6 @@ log_level = 'INFO'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
-evaluation = dict(metric=['bbox', 'track'], interval=2)
+evaluation = dict(metric=['bbox', 'track'], interval=1)
 load_from = 'ckpts/mmdet/faster_rcnn_r50_caffe_fpn_person_ap551.pth'
 work_dir = 'work_dirs/MOT17/qdtrack-frcnn_r50_fpn_4e_mot17'

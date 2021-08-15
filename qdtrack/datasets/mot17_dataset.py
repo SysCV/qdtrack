@@ -128,7 +128,11 @@ class MOT17Dataset(CocoVideoDataset):
 
         return ann
 
-    def format_results(self, results, resfile_path=None, metrics=None):
+    def format_results(self,
+                       results,
+                       resfile_path=None,
+                       metrics=None,
+                       logger=None):
         assert isinstance(results, dict), 'results must be a dict.'
         if resfile_path is None:
             tmp_dir = tempfile.TemporaryDirectory()
@@ -136,7 +140,7 @@ class MOT17Dataset(CocoVideoDataset):
         else:
             tmp_dir = None
             if osp.exists(resfile_path):
-                print_log('remove previous results.', self.logger)
+                print_log('remove previous results.', logger)
                 import shutil
                 shutil.rmtree(resfile_path)
 
@@ -154,8 +158,8 @@ class MOT17Dataset(CocoVideoDataset):
 
         for i in range(num_vids):
             for metric in metrics:
-                formatter = getattr(self, f'format_{metric}_results')
-                formatter(results[f'{metric}_results'][inds[i]:inds[i + 1]],
+                formatter = getattr(self, f'format_{metric}_result')
+                formatter(results[f'{metric}_result'][inds[i]:inds[i + 1]],
                           self.data_infos[inds[i]:inds[i + 1]],
                           f'{resfiles[metric]}/{names[i]}.txt')
 
@@ -188,7 +192,7 @@ class MOT17Dataset(CocoVideoDataset):
                  results,
                  metric='track',
                  logger=None,
-                 resfile_path=None,
+                 resfile_path='./mot/',
                  bbox_iou_thr=0.5,
                  track_iou_thr=0.5):
         eval_results = dict()
@@ -205,7 +209,7 @@ class MOT17Dataset(CocoVideoDataset):
 
         if 'track' in metrics:
             resfiles, names, tmp_dir = self.format_results(
-                results, resfile_path, metrics)
+                results, resfile_path, metrics, logger)
             print_log('Evaluate CLEAR MOT results.', logger=logger)
             distth = 1 - track_iou_thr
 
