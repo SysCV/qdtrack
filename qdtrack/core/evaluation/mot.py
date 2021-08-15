@@ -52,8 +52,6 @@ def acc_single_video(results,
                                     num_classes)
         else:
             gt_ignore = [gt['bboxes_ignore'] for i in range(num_classes)]
-        import pdb
-        pdb.set_trace()
         gt = track2result(gt['bboxes'], gt['labels'], gt['instance_ids'],
                           num_classes)
         for i in range(num_classes):

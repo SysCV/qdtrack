@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 
 import mmcv
 
-from mmtrack.apis import inference_model, init_model
+from qdtrack.apis import inference_model, init_model
 
 
 def main():
