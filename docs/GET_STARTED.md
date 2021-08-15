@@ -122,7 +122,7 @@ But to report the results on BDD100K, evaluating with BDD100K-format is required
 Trained models for testing
 
 - [BDD100K model](https://drive.google.com/file/d/1YNAQgd8rMqqEG-fRj3VWlO4G5kdwJbxz/view?usp=sharing)
-- [TAO model](https://drive.google.com/file/d/1k8-QOEQ-xiEq6RB384VTSY6FyX2DSYNJ/view)
+- [TAO model](https://drive.google.com/file/d/1JtZ9UA0-b9LDor1NHtk8A-g83X7-T89X/view?usp=sharing)
 
 You can use the following commands to test a dataset.
 
