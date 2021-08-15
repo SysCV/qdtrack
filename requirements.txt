@@ -1,8 +1,9 @@
-mmcv-full==1.3.10
-mmdet==2.14.0
+lvis
 motmetrics
 numpy
+pycocotools
 torch>=1.1
 torchvision
 
 git+git://github.com/bdd100k/bdd100k.git
+git+https://github.com/OceanPang/tao.git

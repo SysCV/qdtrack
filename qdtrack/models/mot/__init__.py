@@ -1,3 +1,3 @@
-from .quasi_dense import QuasiDenseFasterRCNN
+from .qdtrack import QDTrack
 
-__all__ = ['QuasiDenseFasterRCNN']
+__all__ = ['QDTrack']

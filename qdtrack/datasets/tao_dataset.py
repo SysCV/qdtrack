@@ -9,6 +9,7 @@ from .parsers import COCO
 
 from .coco_video_dataset import CocoVideoDataset
 from .parsers import CocoVID
+from lvis import LVIS, LVISResults, LVISEval
 
 
 @DATASETS.register_module()
@@ -210,21 +211,6 @@ class TaoDataset(CocoVideoDataset):
                     eval_results[key] = val
 
         if 'bbox' in metrics:
-            try:
-                import lvis
-                assert lvis.__version__ >= '10.5.3'
-                from lvis import LVIS, LVISResults, LVISEval
-            except AssertionError:
-                raise AssertionError(
-                    'Incompatible version of lvis is installed. '
-                    'Run pip uninstall lvis first. Then run pip '
-                    'install mmlvis to install open-mmlab forked '
-                    'lvis. ')
-            except ImportError:
-                raise ImportError(
-                    'Package lvis is not installed. Please run pip '
-                    'install mmlvis to install open-mmlab forked '
-                    'lvis.')
             print_log('Evaluating detection results...', logger)
             lvis_gt = LVIS(self.ann_file)
             lvis_dt = LVISResults(lvis_gt, result_files['bbox'])

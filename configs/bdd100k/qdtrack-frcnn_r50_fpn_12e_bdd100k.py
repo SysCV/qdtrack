@@ -1,41 +1,44 @@
+# model settings
 _base_ = '../_base_/qdtrack_faster_rcnn_r50_fpn.py'
 model = dict(
-    backbone=dict(
-        depth=101,
-        init_cfg=dict(type='Pretrained',
-                      checkpoint='torchvision://resnet101')),
-    roi_head=dict(bbox_head=dict(num_classes=482)),
+    roi_head=dict(bbox_head=dict(num_classes=8)),
     tracker=dict(
-        type='TaoTracker',
-        init_score_thr=0.0001,
-        obj_score_thr=0.0001,
+        type='QuasiDenseEmbedTracker',
+        init_score_thr=0.7,
+        obj_score_thr=0.3,
         match_score_thr=0.5,
-        memo_frames=10,
-        momentum_embed=0.8,
-        momentum_obj_score=0.5,
-        obj_score_diff_thr=1.0,
-        distractor_nms_thr=0.3,
-        distractor_score_thr=0.5,
-        match_metric='bisoftmax',
-        match_with_cosine=True),
-    test_cfg=dict(
-        rcnn=dict(
-            score_thr=0.0001,
-            nms=dict(type='nms', iou_threshold=0.5),
-            max_per_img=300)))
+        memo_tracklet_frames=10,
+        memo_backdrop_frames=1,
+        memo_momentum=0.8,
+        nms_conf_thr=0.5,
+        nms_backdrop_iou_thr=0.3,
+        nms_class_iou_thr=0.7,
+        with_cats=True,
+        match_metric='bisoftmax'),
+    # model training and testing settings
+    train_cfg=dict(
+        embed=dict(
+            sampler=dict(
+                type='CombinedSampler',
+                num=256,
+                pos_fraction=0.5,
+                neg_pos_ub=3,
+                add_gt_as_proposals=True,
+                pos_sampler=dict(type='InstanceBalancedPosSampler'),
+                neg_sampler=dict(
+                    type='IoUBalancedNegSampler',
+                    floor_thr=-1,
+                    floor_fraction=0,
+                    num_bins=3)))))
 # dataset settings
+dataset_type = 'BDDVideoDataset'
+data_root = 'data/bdd/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadMultiImagesFromFile'),
     dict(type='SeqLoadAnnotations', with_bbox=True, with_ins_id=True),
-    dict(
-        type='SeqResize',
-        img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
-                   (1333, 768), (1333, 800)],
-        share_params=True,
-        multiscale_mode='value',
-        keep_ratio=True),
+    dict(type='SeqResize', img_scale=(1296, 720), keep_ratio=True),
     dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.5),
     dict(type='SeqNormalize', **img_norm_cfg),
     dict(type='SeqPad', size_divisor=32),
@@ -49,7 +52,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(1333, 800),
+        img_scale=(1296, 720),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -60,35 +63,34 @@ test_pipeline = [
             dict(type='VideoCollect', keys=['img'])
         ])
 ]
-# dataset settings
-dataset_type = 'TaoDataset'
 data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
-    train=dict(
-        _delete_=True,
-        type='ClassBalancedDataset',
-        oversample_thr=1e-3,
-        dataset=dict(
+    train=[
+        dict(
             type=dataset_type,
-            classes='data/tao/annotations/tao_classes.txt',
+            ann_file=data_root +
+            'labels/box_track_20/box_track_train_cocofmt.json',
+            img_prefix=data_root + 'images/track/train/',
+            key_img_sampler=dict(interval=1),
+            ref_img_sampler=dict(num_ref_imgs=1, scope=3, method='uniform'),
+            pipeline=train_pipeline),
+        dict(
+            type=dataset_type,
             load_as_video=False,
-            ann_file='data/lvis/annotations/lvisv0.5+coco_train.json',
-            img_prefix='data/lvis/train2017/',
-            pipeline=train_pipeline)),
+            ann_file=data_root + 'labels/det_20/det_train_cocofmt.json',
+            img_prefix=data_root + 'images/100k/train/',
+            pipeline=train_pipeline)
+    ],
     val=dict(
         type=dataset_type,
-        classes='data/tao/annotations/tao_classes.txt',
-        ann_file='data/tao/annotations/validation_482_ours.json',
-        img_prefix='data/tao/frames/',
-        ref_img_sampler=None,
+        ann_file=data_root + 'labels/box_track_20/box_track_val_cocofmt.json',
+        img_prefix=data_root + 'images/track/val/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        classes='data/tao/annotations/tao_classes.txt',
-        ann_file='data/tao/annotations/validation_482_ours.json',
-        img_prefix='data/tao/frames/',
-        ref_img_sampler=None,
+        ann_file=data_root + 'labels/box_track_20/box_track_val_cocofmt.json',
+        img_prefix=data_root + 'images/track/val/',
         pipeline=test_pipeline))
 # optimizer
 optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
@@ -99,7 +101,7 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=1000,
     warmup_ratio=1.0 / 1000,
-    step=[16, 22])
+    step=[8, 11])
 # checkpoint saving
 checkpoint_config = dict(interval=1)
 # yapf:disable
@@ -111,11 +113,10 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 24
+total_epochs = 12
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
-evaluation = dict(metric=['bbox', 'track'], start=16, interval=2)
-work_dir = './work_dirs/tao/qdtrack_frcnn_r101_fpn_24e_lvis'
+evaluation = dict(metric=['bbox', 'track'], interval=2)
