@@ -152,8 +152,8 @@ class TaoDataset(CocoVideoDataset):
                 for saving json files when jsonfile_prefix is not specified.
         """
         assert isinstance(results, dict), 'results must be a list'
-        assert 'track_result' in results
-        assert 'bbox_result' in results
+        assert 'track_results' in results
+        assert 'bbox_results' in results
 
         if resfile_path is None:
             tmp_dir = tempfile.TemporaryDirectory()
@@ -163,11 +163,11 @@ class TaoDataset(CocoVideoDataset):
         os.makedirs(resfile_path, exist_ok=True)
         result_files = dict()
 
-        bbox_results = self._det2json(results['bbox_result'])
+        bbox_results = self._det2json(results['bbox_results'])
         result_files['bbox'] = f'{resfile_path}/tao_bbox.json'
         mmcv.dump(bbox_results, result_files['bbox'])
 
-        track_results = self._track2json(results['track_result'])
+        track_results = self._track2json(results['track_results'])
         result_files['track'] = f'{resfile_path}/tao_track.json'
         mmcv.dump(track_results, result_files['track'])
 

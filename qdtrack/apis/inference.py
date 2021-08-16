@@ -12,6 +12,7 @@ from mmdet.datasets import replace_ImageToTensor
 from mmdet.datasets.pipelines import Compose
 from qdtrack.models import build_model
 
+
 def init_model(config, checkpoint=None, device='cuda:0', cfg_options=None):
     """Initialize a detector from config file.
 
@@ -52,19 +53,7 @@ def init_model(config, checkpoint=None, device='cuda:0', cfg_options=None):
     return model
 
 
-def inference_model(model, imgs):
-    """Inference image(s) with the detector.
-
-    Args:
-        model (nn.Module): The loaded detector.
-        imgs (str/ndarray or list[str/ndarray] or tuple[str/ndarray]):
-           Either image files or loaded images.
-
-    Returns:
-        If imgs is a list or tuple, the same length list type results
-        will be returned, otherwise return the detection results directly.
-    """
-
+def inference_model(model, imgs, frame_id):
     if isinstance(imgs, (list, tuple)):
         is_batch = True
     else:
@@ -87,10 +76,12 @@ def inference_model(model, imgs):
         # prepare data
         if isinstance(img, np.ndarray):
             # directly add img
-            data = dict(img=img)
+            data = dict(img=img, frame_id=frame_id)
         else:
             # add information into dict
-            data = dict(img_info=dict(filename=img), img_prefix=None)
+            data = dict(
+                img_info=dict(filename=img, frame_id=frame_id),
+                img_prefix=None)
         # build the data pipeline
 
         data = test_pipeline(data)
@@ -111,7 +102,8 @@ def inference_model(model, imgs):
 
     # forward the model
     with torch.no_grad():
-        results = model(return_loss=False, rescale=True, detection_only=True, **data)
+        results = model(
+            return_loss=False, rescale=True, detection_only=True, **data)
 
     if not is_batch:
         return results[0]

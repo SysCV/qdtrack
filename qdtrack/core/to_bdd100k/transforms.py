@@ -11,15 +11,16 @@ from .utils import mask_merge_parallel
 
 CATEGORIES = [
     '', 'pedestrian', 'rider', 'car', 'truck', 'bus', 'train', 'motorcycle',
-    'bicycle', 'traffic light', 'traffic sign']
+    'bicycle', 'traffic light', 'traffic sign'
+]
 
 
 def det_to_bdd100k(dataset, results, out_base, nproc):
     bdd100k = []
     ann_id = 0
     print(f'\nStart converting to BDD100K detection format')
-    if 'bbox_result' in results:
-        results = results['bbox_result']
+    if 'bbox_results' in results:
+        results = results['bbox_results']
     for idx, bboxes_list in tqdm(enumerate(results)):
         img_name = dataset.data_infos[idx]['file_name']
         frame = Frame(name=img_name, labels=[])
@@ -46,13 +47,14 @@ def ins_seg_to_bdd100k(dataset, results, out_base, nproc=4):
     if not osp.exists(bitmask_base):
         os.makedirs(bitmask_base)
 
-    if 'bbox_result' in results and 'segm_result' in results:
-        results = [[bbox, segm] for bbox, segm in zip(results['bbox_result'],
-                                                      results['segm_result'])]
+    if 'bbox_results' in results and 'segm_results' in results:
+        results = [[bbox, segm] for bbox, segm in zip(results['bbox_results'],
+                                                      results['segm_results'])]
 
     track_dicts = []
     img_names = [
-        dataset.data_infos[idx]['file_name'] for idx in range(len(results))]
+        dataset.data_infos[idx]['file_name'] for idx in range(len(results))
+    ]
 
     print(f'\nStart converting to BDD100K instance segmentation format')
     ann_id = 0
@@ -60,8 +62,7 @@ def ins_seg_to_bdd100k(dataset, results, out_base, nproc=4):
         index = 0
         frame = Frame(name=img_names[idx], labels=[])
         track_dict = {}
-        for cls_, (bboxes, segms) in enumerate(zip(bboxes_list,
-                                                    segms_list)):
+        for cls_, (bboxes, segms) in enumerate(zip(bboxes_list, segms_list)):
             for bbox, segm in zip(bboxes, segms):
                 ann_id += 1
                 index += 1
@@ -69,7 +70,7 @@ def ins_seg_to_bdd100k(dataset, results, out_base, nproc=4):
                 frame.labels.append(label)
                 instance = {'bbox': bbox, 'segm': segm, 'label': cls_}
                 track_dict[index] = instance
-        
+
         bdd100k.append(frame)
         track_dicts.append(track_dict)
 
@@ -87,7 +88,7 @@ def box_track_to_bdd100k(dataset, results, out_base, nproc):
         os.makedirs(track_base)
 
     print(f'\nStart converting to BDD100K box tracking format')
-    for idx, track_dict in tqdm(enumerate(results['track_result'])):
+    for idx, track_dict in tqdm(enumerate(results['track_results'])):
         img_name = dataset.data_infos[idx]['file_name']
         frame_index = dataset.data_infos[idx]['frame_id']
         vid_name = os.path.split(img_name)[0]
@@ -121,8 +122,10 @@ def seg_track_to_bdd100k(dataset, results, out_base, nproc=4):
     print(f'\nStart converting to BDD100K seg tracking format')
     img_names = [
         dataset.data_infos[idx]['file_name']
-        for idx in range(len(results['track_result']))]
-    mask_merge_parallel(results['track_result'], img_names, bitmask_base, nproc)
+        for idx in range(len(results['track_results']))
+    ]
+    mask_merge_parallel(results['track_results'], img_names, bitmask_base,
+                        nproc)
 
 
 def preds2bdd100k(dataset, results, tasks, out_base, *args, **kwargs):

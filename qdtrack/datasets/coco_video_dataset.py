@@ -104,7 +104,7 @@ class CocoVideoDataset(CocoDataset):
             dict: Annotation info of specified index.
         """
         img_id = img_info['id']
-        ann_ids = self.coco.get_ann_ids(img_ids=[img_id])
+        ann_ids = self.coco.get_ann_ids(img_ids=[img_id], cat_ids=self.cat_ids)
         ann_info = self.coco.load_anns(ann_ids)
         return self._parse_ann_info(img_info, ann_info)
 
@@ -124,7 +124,7 @@ class CocoVideoDataset(CocoDataset):
         return results, ref_results
 
     def _match_gts(self, ann, ref_ann):
-        if ann.get('instance_ids', False):
+        if 'instance_ids' in ann:
             ins_ids = list(ann['instance_ids'])
             ref_ins_ids = list(ref_ann['instance_ids'])
             match_indices = np.array([
@@ -228,7 +228,9 @@ class CocoVideoDataset(CocoDataset):
             seg_map=seg_map)
 
         if self.load_as_video:
-            ann['instance_ids'] = gt_instance_ids
+            ann['instance_ids'] = np.array(gt_instance_ids).astype(np.int)
+        else:
+            ann['instance_ids'] = np.arange(len(gt_labels))
 
         return ann
 
@@ -239,44 +241,72 @@ class CocoVideoDataset(CocoDataset):
                  results,
                  metric=['bbox', 'track'],
                  logger=None,
-                 classwise=False,
-                 mot_class_average=False,
-                 proposal_nums=(100, 300, 1000),
-                 iou_thr=None,
-                 metric_items=None):
+                 bbox_kwargs=dict(
+                     classwise=False,
+                     proposal_nums=(100, 300, 1000),
+                     iou_thrs=None,
+                     metric_items=None),
+                 track_kwargs=dict(
+                     iou_thr=0.5,
+                     ignore_iof_thr=0.5,
+                     ignore_by_classes=False,
+                     nproc=4)):
         # evaluate for detectors without tracker
-        eval_results = dict()
-        metrics = metric if isinstance(metric, list) else [metric]
+        if isinstance(metric, list):
+            metrics = metric
+        elif isinstance(metric, str):
+            metrics = [metric]
+        else:
+            raise TypeError('metric must be a list or a str.')
         allowed_metrics = ['bbox', 'segm', 'track']
         for metric in metrics:
             if metric not in allowed_metrics:
-                raise KeyError(f'metric {metric} is not supported')
+                raise KeyError(f'metric {metric} is not supported.')
 
+        eval_results = dict()
+        if 'track' in metrics:
+            assert len(self.data_infos) == len(results['track_results'])
+            inds = [
+                i for i, _ in enumerate(self.data_infos) if _['frame_id'] == 0
+            ]
+            num_vids = len(inds)
+            inds.append(len(self.data_infos))
+
+            track_results = [
+                results['track_results'][inds[i]:inds[i + 1]]
+                for i in range(num_vids)
+            ]
+            ann_infos = [self.get_ann_info(_) for _ in self.data_infos]
+            ann_infos = [
+                ann_infos[inds[i]:inds[i + 1]] for i in range(num_vids)
+            ]
+            track_eval_results = eval_mot(
+                results=track_results,
+                annotations=ann_infos,
+                logger=logger,
+                classes=self.CLASSES,
+                **track_kwargs)
+            eval_results.update(track_eval_results)
+
+        # evaluate for detectors without tracker
         super_metrics = ['bbox', 'segm']
         super_metrics = [_ for _ in metrics if _ in super_metrics]
         if super_metrics:
-            if 'bbox' in super_metrics and 'segm' in super_metrics:
-                super_results = []
-                for bbox, segm in zip(results['bbox_result'],
-                                      results['segm_result']):
-                    super_results.append((bbox, segm))
+            if isinstance(results, dict):
+                if 'bbox' in super_metrics and 'segm' in super_metrics:
+                    super_results = []
+                    for bbox, segm in zip(results['bbox_results'],
+                                          results['segm_results']):
+                        super_results.append((bbox, segm))
+                else:
+                    super_results = results['bbox_results']
             else:
-                super_results = results['bbox_result']
+                super_results = results
             super_eval_results = super().evaluate(
                 results=super_results,
                 metric=super_metrics,
                 logger=logger,
-                classwise=classwise,
-                proposal_nums=proposal_nums,
-                iou_thrs=iou_thr,
-                metric_items=metric_items)
+                **bbox_kwargs)
             eval_results.update(super_eval_results)
-
-        if 'track' in metrics:
-            track_eval_results = eval_mot(
-                mmcv.load(self.ann_file),
-                results['track_result'],
-                class_average=mot_class_average)
-            eval_results.update(track_eval_results)
 
         return eval_results
