@@ -19,7 +19,7 @@ On the offical download page, the required data and annotations are
 
 To organize the annotations for training and inference, we implement a [dataset API](../qdtrack/datasets/parsers/coco_video_parser.py) that is similiar to COCO-style.
 
-After downloaded the annotations, please transform the offical annotation files to CocoVID style with the provided [scripts](../tools/convert_datasets).
+After downloaded the annotations, please transform the offical annotation files to CocoVID style as follows.
 
 First, uncompress the downloaded annotation file and you will obtain a folder named `bdd100k`.
 
