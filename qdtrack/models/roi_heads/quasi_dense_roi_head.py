@@ -2,7 +2,7 @@ import torch
 from mmdet.core import bbox2roi, build_assigner, build_sampler
 from mmdet.models import HEADS, build_head, build_roi_extractor
 from mmdet.models.roi_heads import StandardRoIHead
-
+import tensorflow as tf
 
 @HEADS.register_module()
 class QuasiDenseRoIHead(StandardRoIHead):
@@ -19,6 +19,37 @@ class QuasiDenseRoIHead(StandardRoIHead):
             self.init_track_head(track_roi_extractor, track_head)
             if self.track_train_cfg:
                 self.init_track_assigner_sampler()
+        self._signitures = {
+            'image_files': 'image_files:0',
+            'image_arrays': 'image_arrays:0',
+            'prediction': 'detections:0',
+        }
+        self.efficient_det_path = '/home/erdos/workspace/pylot/dependencies/models/obstacle_detection/efficientdet/efficientdet-d7x/efficientdet-d7x_frozen.pb'
+        self._model_name, self._tf_session = load_serving_model('efficientdet-d7x', self.efficient_det_path)
+
+    def load_serving_model(self, model_name, model_path):
+        detection_graph = tf.Graph()
+        with detection_graph.as_default():
+            # Load a frozen graph.
+            graph_def = tf.GraphDef()
+            with tf.gfile.GFile(model_path, 'rb') as f:
+                graph_def.ParseFromString(f.read())
+                tf.import_graph_def(graph_def, name='')
+        gpu_options = tf.GPUOptions(
+            allow_growth=True,
+            visible_device_list=str(0))
+        return model_name, tf.Session(
+            graph=detection_graph,
+            config=tf.ConfigProto(gpu_options=gpu_options))
+
+    def efficient_det_predict(self, inputs):
+        outputs_np = self._tf_session.run(
+            self._signitures['prediction'],
+            feed_dict={self._signitures['image_arrays']: [inputs]})[0]
+        # _, ymin, xmin, ymax, xmax, score, _class
+        bboxes = [outputs_np[:, 1:6]]
+        labels = [outputs_np[:, 6]]
+        return bboxes, labels
 
     def init_track_assigner_sampler(self):
         """Initialize assigner and sampler."""
