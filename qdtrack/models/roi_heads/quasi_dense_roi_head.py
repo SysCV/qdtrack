@@ -3,7 +3,7 @@ from mmdet.core import bbox2roi, build_assigner, build_sampler
 from mmdet.models import HEADS, build_head, build_roi_extractor
 from mmdet.models.roi_heads import StandardRoIHead
 import tensorflow as tf
-
+import numpy as np
 @HEADS.register_module()
 class QuasiDenseRoIHead(StandardRoIHead):
 
@@ -25,7 +25,7 @@ class QuasiDenseRoIHead(StandardRoIHead):
             'prediction': 'detections:0',
         }
         self.efficient_det_path = '/home/erdos/workspace/pylot/dependencies/models/obstacle_detection/efficientdet/efficientdet-d7x/efficientdet-d7x_frozen.pb'
-        self._model_name, self._tf_session = load_serving_model('efficientdet-d7x', self.efficient_det_path)
+        self._model_name, self._tf_session = self.load_serving_model('efficientdet-d7x', self.efficient_det_path)
 
     def load_serving_model(self, model_name, model_path):
         detection_graph = tf.Graph()
@@ -42,14 +42,17 @@ class QuasiDenseRoIHead(StandardRoIHead):
             graph=detection_graph,
             config=tf.ConfigProto(gpu_options=gpu_options))
 
-    def efficient_det_predict(self, inputs):
+    def efficient_det_predict(self, inputs, device):
+        img = inputs[0].permute(1, 2, 0).cpu().numpy()
         outputs_np = self._tf_session.run(
             self._signitures['prediction'],
-            feed_dict={self._signitures['image_arrays']: [inputs]})[0]
+            feed_dict={self._signitures['image_arrays']: [img]})[0]
         # _, ymin, xmin, ymax, xmax, score, _class
-        bboxes = [outputs_np[:, 1:6]]
-        labels = [outputs_np[:, 6]]
-        return bboxes, labels
+        outputs_np = outputs_np[~(outputs_np[:, 5]==0)]
+        bboxes = outputs_np[:, 1:6]
+        labels = outputs_np[:, 6]
+        
+        return [torch.from_numpy(bboxes).to(device)], [torch.from_numpy(labels).to(device)]
 
     def init_track_assigner_sampler(self):
         """Initialize assigner and sampler."""
@@ -165,9 +168,10 @@ class QuasiDenseRoIHead(StandardRoIHead):
         track_feats = self.track_head(track_feats)
         return track_feats
 
-    def simple_test(self, x, img_metas, proposal_list, rescale):
+    def simple_test(self, x, img, img_metas, proposal_list, rescale):
         det_bboxes, det_labels = self.simple_test_bboxes(
             x, img_metas, proposal_list, self.test_cfg, rescale=rescale)
+        det_bboxes, det_labels = self.efficient_det_predict(img, det_bboxes[0].device)
 
         # TODO: support batch inference
         det_bboxes = det_bboxes[0]
