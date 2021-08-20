@@ -86,6 +86,10 @@ model = dict(
         with_cats=True,
         match_metric='bisoftmax'),
 
+    efficient_det = dict(
+        model_path='/home/erdos/workspace/pylot/dependencies/models/obstacle_detection/efficientdet/efficientdet-d7x/efficientdet-d7x_frozen.pb',
+        type='efficientdet-d7x',
+    ),
     # model training and testing settings
     train_cfg = dict(
         rpn=dict(
