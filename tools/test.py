@@ -39,7 +39,8 @@ def parse_args():
         '--tmpdir',
         help='tmp directory used for collecting results from multiple '
         'workers, available when gpu-collect is not specified')
-    parser.add_argument('--show_score_thr', default=0.3, type=float, help='output result file')
+    parser.add_argument(
+        '--show_score_thr', default=0.3, type=float, help='output result file')
     parser.add_argument(
         '--cfg-options',
         nargs='+',

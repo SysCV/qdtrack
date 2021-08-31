@@ -1,3 +1,4 @@
+import numpy as np
 from mmdet.core import bbox2result
 from mmdet.models import TwoStageDetector
 
@@ -105,8 +106,10 @@ class QDTrack(TwoStageDetector):
             track_result = track2result(bboxes, labels, ids,
                                         self.roi_head.bbox_head.num_classes)
         else:
-            from collections import defaultdict
-            track_result = defaultdict(list)
+            track_result = [
+                np.zeros((0, 6), dtype=np.float32)
+                for i in range(self.roi_head.bbox_head.num_classes)
+            ]
         return dict(bbox_results=bbox_result, track_results=track_result)
 
     def show_result(self,
