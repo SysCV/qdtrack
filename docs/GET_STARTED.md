@@ -10,9 +10,9 @@ For more details about the dataset, please refer to the [offial documentation](h
 
 On the offical download page, the required data and annotations are
 
-- `detection` set images: `Images`
+- `detection` set images: `100K Images`
 - `detection` set annotations: `Detection 2020 Labels`
-- `tracking` set images: `MOT 2020 Data`
+- `tracking` set images: `MOT 2020 Images`
 - `tracking` set annotations: `MOT 2020 Labels`
 
 #### Convert annotations
@@ -26,13 +26,13 @@ First, uncompress the downloaded annotation file and you will obtain a folder na
 To convert the detection set, you can do as
 ```bash
 mkdir data/bdd/labels/det_20
-python -m bdd100k.label.to_coco -m det -l bdd100k/labels/det_20/det_${SET_NAME}.json -o data/bdd/labels/det_20/det_${SET_NAME}_cocofmt.json
+python -m bdd100k.label.to_coco -m det -i bdd100k/labels/det_20/det_${SET_NAME}.json -o data/bdd/labels/det_20/det_${SET_NAME}_cocofmt.json
 ```
 
 To convert the tracking set, you can do as
 ```bash
 mkdir data/bdd/labels/box_track_20
-python -m bdd100k.label.to_coco -m box_track -l bdd100k/labels/box_track_20/${SET_NAME} -o data/bdd/labels/box_track_20/box_track_${SET_NAME}_cocofmt.json
+python -m bdd100k.label.to_coco -m box_track -i bdd100k/labels/box_track_20/${SET_NAME} -o data/bdd/labels/box_track_20/box_track_${SET_NAME}_cocofmt.json
 ```
 
 The `${SET_NAME}` here can be one of ['train', 'val'].
