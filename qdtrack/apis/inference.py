@@ -53,44 +53,24 @@ def init_model(config, checkpoint=None, device='cuda:0', cfg_options=None):
     return model
 
 
-def inference_model(model, imgs, frame_id):
-    if isinstance(imgs, (list, tuple)):
-        is_batch = True
-    else:
-        imgs = [imgs]
-        is_batch = False
-
+def inference_model(model, img, frame_id):
     cfg = model.cfg
     device = next(model.parameters()).device  # model device
-
-    if isinstance(imgs[0], np.ndarray):
+    # prepare data
+    if isinstance(img, np.ndarray):
+        # directly add img
+        data = dict(img=img, img_info=dict(frame_id=frame_id), img_prefix=None)
         cfg = cfg.copy()
         # set loading pipeline type
         cfg.data.test.pipeline[0].type = 'LoadImageFromWebcam'
-
-    cfg.data.test.pipeline = replace_ImageToTensor(cfg.data.test.pipeline)
+    else:
+        # add information into dict
+        data = dict(
+            img_info=dict(filename=img, frame_id=frame_id), img_prefix=None)
+    # build the data pipeline
     test_pipeline = Compose(cfg.data.test.pipeline)
-
-    datas = []
-    for img in imgs:
-        # prepare data
-        if isinstance(img, np.ndarray):
-            # directly add img
-            data = dict(img=img, frame_id=frame_id)
-        else:
-            # add information into dict
-            data = dict(
-                img_info=dict(filename=img, frame_id=frame_id),
-                img_prefix=None)
-        # build the data pipeline
-
-        data = test_pipeline(data)
-        datas.append(data)
-
-    data = collate(datas, samples_per_gpu=len(imgs))
-    # just get the actual data from DataContainer
-    data['img_metas'] = [img_metas.data[0] for img_metas in data['img_metas']]
-    data['img'] = [img.data[0] for img in data['img']]
+    data = test_pipeline(data)
+    data = collate([data], samples_per_gpu=1)
     if next(model.parameters()).is_cuda:
         # scatter to specified GPU
         data = scatter(data, [device])[0]
@@ -99,16 +79,12 @@ def inference_model(model, imgs, frame_id):
             assert not isinstance(
                 m, RoIPool
             ), 'CPU inference with RoIPool is not supported currently.'
-
+        # just get the actual data from DataContainer
+        data['img_metas'] = data['img_metas'][0].data
     # forward the model
     with torch.no_grad():
-        results = model(
-            return_loss=False, rescale=True, detection_only=True, **data)
-
-    if not is_batch:
-        return results[0]
-    else:
-        return results
+        result = model(return_loss=False, rescale=True, **data)
+    return result
 
 
 def show_result_pyplot(model,

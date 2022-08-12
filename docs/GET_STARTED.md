@@ -1,7 +1,7 @@
 # Getting Started
 This page provides basic tutorials about the usage of QDTrack. For installation instructions, please see [INSTALL.md](INSTALL.md).
 
-This document is based on BDD100K dataset. For usages on the other datasets, please refer to [TAO](../configs/tao/README.md).
+This document is based on BDD100K dataset. For usages on the other datasets, please refer to [TAO](../configs/tao/README.md) or [MOT17](../configs/mot17/README.md).
 ## Prepare Datasets
 
 #### Download BDD100K
@@ -23,7 +23,10 @@ After downloaded the annotations, please transform the offical annotation files 
 
 First, uncompress the downloaded annotation file and you will obtain a folder named `bdd100k`.
 
+Run `pip install git+https://github.com/bdd100k/bdd100k.git` to install the lastest bdd100k toolkit. 
+
 To convert the detection set, you can do as
+
 ```bash
 mkdir data/bdd/labels/det_20
 python -m bdd100k.label.to_coco -m det -i bdd100k/labels/det_20/det_${SET_NAME}.json -o data/bdd/labels/det_20/det_${SET_NAME}_cocofmt.json
