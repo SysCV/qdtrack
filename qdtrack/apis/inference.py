@@ -59,14 +59,14 @@ def inference_model(model, img, frame_id):
     # prepare data
     if isinstance(img, np.ndarray):
         # directly add img
-        data = dict(img=img, img_info=dict(frame_id=frame_id), img_prefix=None)
+        data = dict(img=img, frame_id=frame_id, img_prefix=None)
         cfg = cfg.copy()
         # set loading pipeline type
         cfg.data.test.pipeline[0].type = 'LoadImageFromWebcam'
     else:
         # add information into dict
         data = dict(
-            img_info=dict(filename=img, frame_id=frame_id), img_prefix=None)
+            img_info=dict(filename=img), frame_id=frame_id, img_prefix=None)
     # build the data pipeline
     test_pipeline = Compose(cfg.data.test.pipeline)
     data = test_pipeline(data)
