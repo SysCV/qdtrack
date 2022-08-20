@@ -156,8 +156,6 @@ def main():
             cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
     else:
         model = build_model(cfg.model)
-    # We need call `init_weights()` to load pretained weights in MOT task. # why
-    # model.init_weights()
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)
@@ -182,15 +180,16 @@ def main():
             broadcast_buffers=False)
 
     print_log(f'Record {cfg.search_metrics}.', logger)
+
     for i, search_cfg in enumerate(search_cfgs):
         if not distributed:
             model.module.tracker = build_tracker(search_cfg)
-            outputs = single_gpu_test(model, data_loader, args.show,
-                                      args.show_dir)
+            outputs = single_gpu_test(model, data_loader)
         else:
             model.module.tracker = build_tracker(search_cfg)
             outputs = multi_gpu_test(model, data_loader, args.tmpdir,
                                      args.gpu_collect)
+                                     
         rank, _ = get_dist_info()
         if rank == 0:
             if args.out:

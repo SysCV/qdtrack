@@ -10,7 +10,8 @@ import torch.distributed as dist
 from mmcv.runner import get_dist_info
 
 
-def single_gpu_test(model, data_loader):
+def single_gpu_test(model, data_loader, show=False):
+    # add args `show` to make it consitent with `single_gpu_test` in `eval_hook`
     model.eval()
     results = defaultdict(list)
     dataset = data_loader.dataset
