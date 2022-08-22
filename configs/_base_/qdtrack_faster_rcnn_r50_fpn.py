@@ -1,9 +1,10 @@
 _base_ = './faster_rcnn_r50_fpn.py'
 model = dict(
     type='QDTrack',
-    rpn_head=dict(
-        loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
-    roi_head=dict(
+    detector=dict(
+        rpn_head=dict(
+            loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0))),
+    track_head=dict(
         type='QuasiDenseRoIHead',
         track_roi_extractor=dict(
             type='SingleRoIExtractor',
@@ -23,9 +24,8 @@ model = dict(
                 pos_margin=0,
                 neg_margin=0.1,
                 hard_mining=True,
-                loss_weight=1.0))),
-    train_cfg=dict(
-        embed=dict(
+                loss_weight=1.0)),
+        track_train_cfg=dict(
             assigner=dict(
                 type='MaxIoUAssigner',
                 pos_iou_thr=0.7,
@@ -40,4 +40,6 @@ model = dict(
                 neg_pos_ub=3,
                 add_gt_as_proposals=True,
                 pos_sampler=dict(type='InstanceBalancedPosSampler'),
-                neg_sampler=dict(type='RandomSampler')))))
+                neg_sampler=dict(type='RandomSampler')))
+    ),
+)

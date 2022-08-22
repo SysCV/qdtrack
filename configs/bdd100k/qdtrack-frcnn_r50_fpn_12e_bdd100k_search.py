@@ -1,23 +1,9 @@
 # model settings
 _base_ = '../_base_/qdtrack_faster_rcnn_r50_fpn.py'
 model = dict(
-    roi_head=dict(bbox_head=dict(num_classes=8)),
-    tracker=dict(
-        type='QuasiDenseEmbedTracker',
-        init_score_thr=[0.3,0.7],
-        obj_score_thr=[0.1,0.3],
-        match_score_thr=0.5,
-        memo_tracklet_frames=10,
-        memo_backdrop_frames=1,
-        memo_momentum=0.8,
-        nms_conf_thr=0.5,
-        nms_backdrop_iou_thr=0.3,
-        nms_class_iou_thr=0.7,
-        with_cats=True,
-        match_metric='bisoftmax'),
-    # model training and testing settings
-    train_cfg=dict(
-        embed=dict(
+    detector=dict(roi_head=dict(bbox_head=dict(num_classes=8))),
+    track_head=dict(
+        track_train_cfg=dict(
             sampler=dict(
                 type='CombinedSampler',
                 num=256,
@@ -29,7 +15,22 @@ model = dict(
                     type='IoUBalancedNegSampler',
                     floor_thr=-1,
                     floor_fraction=0,
-                    num_bins=3)))))
+                    num_bins=3)))),
+    tracker=dict(
+        type='QuasiDenseEmbedTracker',
+        init_score_thr=[0.9],
+        obj_score_thr=[0.3, 0.4],
+        match_score_thr=0.5,
+        memo_tracklet_frames=10,
+        memo_backdrop_frames=1,
+        memo_momentum=0.8,
+        nms_conf_thr=0.5,
+        nms_backdrop_iou_thr=0.3,
+        nms_class_iou_thr=0.7,
+        with_cats=True,
+        match_metric='bisoftmax'),
+    # model training and testing settings
+    )
 # dataset settings
 dataset_type = 'BDDVideoDataset'
 data_root = 'data/bdd/'

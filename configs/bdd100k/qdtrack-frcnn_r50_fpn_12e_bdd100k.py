@@ -1,7 +1,21 @@
 # model settings
 _base_ = '../_base_/qdtrack_faster_rcnn_r50_fpn.py'
 model = dict(
-    roi_head=dict(bbox_head=dict(num_classes=8)),
+    detector=dict(roi_head=dict(bbox_head=dict(num_classes=8))),
+    track_head=dict(
+        track_train_cfg=dict(
+            sampler=dict(
+                type='CombinedSampler',
+                num=256,
+                pos_fraction=0.5,
+                neg_pos_ub=3,
+                add_gt_as_proposals=True,
+                pos_sampler=dict(type='InstanceBalancedPosSampler'),
+                neg_sampler=dict(
+                    type='IoUBalancedNegSampler',
+                    floor_thr=-1,
+                    floor_fraction=0,
+                    num_bins=3)))),
     tracker=dict(
         type='QuasiDenseEmbedTracker',
         init_score_thr=0.7,
@@ -16,20 +30,7 @@ model = dict(
         with_cats=True,
         match_metric='bisoftmax'),
     # model training and testing settings
-    train_cfg=dict(
-        embed=dict(
-            sampler=dict(
-                type='CombinedSampler',
-                num=256,
-                pos_fraction=0.5,
-                neg_pos_ub=3,
-                add_gt_as_proposals=True,
-                pos_sampler=dict(type='InstanceBalancedPosSampler'),
-                neg_sampler=dict(
-                    type='IoUBalancedNegSampler',
-                    floor_thr=-1,
-                    floor_fraction=0,
-                    num_bins=3)))))
+    )
 # dataset settings
 dataset_type = 'BDDVideoDataset'
 data_root = 'data/bdd/'

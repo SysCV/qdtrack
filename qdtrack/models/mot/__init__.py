@@ -1,3 +1,3 @@
-from .qdtrack_decouple import QDTrack
+from .qdtrack import QDTrack
 
 __all__ = ['QDTrack']
