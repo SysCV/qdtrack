@@ -9,7 +9,6 @@ from qdtrack.core import cal_similarity
 
 @HEADS.register_module()
 class QuasiDenseEmbedHead(nn.Module):
-
     def __init__(self,
                  num_convs=4,
                  num_fcs=1,

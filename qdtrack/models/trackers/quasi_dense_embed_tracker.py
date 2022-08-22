@@ -7,7 +7,6 @@ from ..builder import TRACKERS
 
 @TRACKERS.register_module()
 class QuasiDenseEmbedTracker(object):
-
     def __init__(self,
                  init_score_thr=0.8,
                  obj_score_thr=0.5,

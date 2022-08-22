@@ -10,9 +10,7 @@ from qdtrack.core import imshow_tracks, restore_result
 
 @MODELS.register_module()
 class QDTrack(BaseDetector):
-
     def __init__(self, detector=None, track_head=None, tracker=None, freeze_detector=False, *args, **kwargs):
-        #self.prepare_cfg(kwargs)
         super().__init__()
         self.tracker_cfg = tracker
 
@@ -35,11 +33,6 @@ class QDTrack(BaseDetector):
             model.eval()
             for param in model.parameters():
                 param.requires_grad = False
-
-    # def prepare_cfg(self, kwargs):
-    #     if kwargs.get('train_cfg', False):
-    #         kwargs['roi_head']['track_train_cfg'] = kwargs['train_cfg'].get(
-    #             'embed', None)
 
     def init_tracker(self):
         self.tracker = build_tracker(self.tracker_cfg)

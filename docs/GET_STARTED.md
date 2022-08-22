@@ -99,6 +99,7 @@ Optional arguments are:
 
 - `resume-from` loads both the model weights and optimizer status, and the epoch is also inherited from the specified checkpoint. It is usually used for resuming the training process that is interrupted accidentally.
 - For more clear usage, the original `load-from` is deprecated and you can use `--cfg-options 'load_from="path/to/you/model"'` instead. It only loads the model weights and the training epoch starts from 0 which is usually used for finetuning.
+- `qdtrack` now supports changing detectors.
 
 
 #### Launch multiple jobs on a single machine
@@ -158,3 +159,22 @@ Optional arguments:
 - `TASK_NAME`: Task names in one of [`det`, `ins_seg`, `box_track`, `seg_track`]
 - `BDD_OUPPUT_DIR`: The dir path to save the converted bdd jsons and masks.
 - `COCO_PRED_FILE`: Filename of the json in coco submission format.
+
+### Search parameters for the tracker
+
+We provide scripts to search parameters for the tracker to reach better performance. You can use the following commands to search parameters.
+
+```shell
+sh tools/dist_test_search.sh ${CONFIG_FILE} ${CHECKPOINT_FILE} ${GPU_NUM}
+```
+
+You can follow the example of `configs/bdd100k/qdtrack-frcnn_r50_fpn_12e_bdd100k_search.py` to configure you searching settings.
+
+
+### Inference
+
+We provide scripts to inference and output videos. You can use the following commands to do that.
+
+```shell
+python tools/inference.py ${CONFIG_FILE} --input ${INPUT_FILE_OR_FOLDER} --output ${OUTPUT_FILE_OR_FOLDER} --checkpoint ${CHECKPOINT_FILE} --fps ${FPS}
+```
