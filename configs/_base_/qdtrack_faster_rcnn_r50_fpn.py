@@ -3,7 +3,8 @@ model = dict(
     type='QDTrack',
     detector=dict(
         rpn_head=dict(
-            loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0))),
+            loss_bbox=dict(
+                type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0))),
     track_head=dict(
         type='QuasiDenseRoIHead',
         track_roi_extractor=dict(
@@ -40,6 +41,5 @@ model = dict(
                 neg_pos_ub=3,
                 add_gt_as_proposals=True,
                 pos_sampler=dict(type='InstanceBalancedPosSampler'),
-                neg_sampler=dict(type='RandomSampler')))
-    ),
+                neg_sampler=dict(type='RandomSampler')))),
 )

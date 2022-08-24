@@ -189,7 +189,7 @@ def main():
             model.module.tracker = build_tracker(search_cfg)
             outputs = multi_gpu_test(model, data_loader, args.tmpdir,
                                      args.gpu_collect)
-                                     
+
         rank, _ = get_dist_info()
         if rank == 0:
             if args.out:

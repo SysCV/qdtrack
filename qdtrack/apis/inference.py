@@ -6,10 +6,10 @@ import torch
 from mmcv.ops import RoIPool
 from mmcv.parallel import collate, scatter
 from mmcv.runner import load_checkpoint
-
 from mmdet.core import get_classes
 from mmdet.datasets import replace_ImageToTensor
 from mmdet.datasets.pipelines import Compose
+
 from qdtrack.models import build_model
 
 

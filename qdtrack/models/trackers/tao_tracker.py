@@ -77,8 +77,8 @@ class TaoTracker(object):
                 self.tracklets[id]['bboxes'].append(bbox)
                 self.tracklets[id]['labels'].append(label)
                 self.tracklets[id]['embeds'] = (
-                                                       1 - self.momentum_embed
-                                               ) * self.tracklets[id]['embeds'] + self.momentum_embed * embed
+                    1 - self.momentum_embed
+                ) * self.tracklets[id]['embeds'] + self.momentum_embed * embed
                 self.tracklets[id]['frame_ids'].append(frame_id)
             else:
                 self.tracklets[id] = dict(
@@ -198,7 +198,7 @@ class TaoTracker(object):
                     scores[i + 1:, memo_ind] = 0
                     m = self.momentum_obj_score
                     bboxes[i, -1] = m * bboxes[i, -1] + (
-                            1 - m) * memo_bboxes[memo_ind, -1]
+                        1 - m) * memo_bboxes[memo_ind, -1]
         else:
             ids = torch.full((bboxes.size(0), ), -1, dtype=torch.long)
         # init tracklets

@@ -4,6 +4,7 @@ import os
 import mmcv
 from mmcv import Config, DictAction
 from mmdet.datasets import build_dataset
+
 from qdtrack.core.to_bdd100k import preds2bdd100k
 
 
@@ -26,9 +27,7 @@ def parse_args():
         help='task types',
         choices=['det', 'ins_seg', 'box_track', 'seg_track'])
     parser.add_argument(
-        '--nproc',
-        type=int,
-        help='number of process for mask merging')
+        '--nproc', type=int, help='number of process for mask merging')
     parser.add_argument(
         '--cfg-options',
         nargs='+',
@@ -66,7 +65,12 @@ def main():
         dataset.format_results(results, jsonfile_prefix=args.coco_file)
     if args.bdd_dir:
         preds2bdd100k(
-            dataset, results, args.task, out_base=args.bdd_dir, nproc=args.nproc)
+            dataset,
+            results,
+            args.task,
+            out_base=args.bdd_dir,
+            nproc=args.nproc)
+
 
 if __name__ == '__main__':
     main()

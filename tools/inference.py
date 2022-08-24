@@ -39,7 +39,7 @@ def main():
         imgs = sorted(
             filter(lambda x: x.endswith(('.jpg', '.png', '.jpeg')),
                    os.listdir(args.input)),
-            key=lambda x: int(x.split('.')[0][-7:])) # may cause bug
+            key=lambda x: int(x.split('.')[0][-7:]))  # may cause bug
         IN_VIDEO = False
     else:
         imgs = mmcv.VideoReader(args.input)

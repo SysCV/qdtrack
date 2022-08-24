@@ -1,7 +1,8 @@
 import torch
+from mmcv.runner import BaseModule
 from mmdet.core import bbox2roi, build_assigner, build_sampler
 from mmdet.models import HEADS, build_head, build_roi_extractor
-from mmcv.runner import BaseModule
+
 
 @HEADS.register_module()
 class QuasiDenseRoIHead(BaseModule):
@@ -96,8 +97,8 @@ class QuasiDenseRoIHead(BaseModule):
                 key_sampling_results.append(sampling_result)
 
                 ref_assign_result = self.track_roi_assigner.assign(
-                    ref_proposals[i], ref_gt_bboxes[i], ref_gt_bboxes_ignore[i],
-                    ref_gt_labels[i])
+                    ref_proposals[i], ref_gt_bboxes[i],
+                    ref_gt_bboxes_ignore[i], ref_gt_labels[i])
                 ref_sampling_result = self.track_roi_sampler.sample(
                     ref_assign_result,
                     ref_proposals[i],

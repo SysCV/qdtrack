@@ -30,7 +30,7 @@ model = dict(
         with_cats=True,
         match_metric='bisoftmax'),
     # model training and testing settings
-    )
+)
 # dataset settings
 dataset_type = 'BDDVideoDataset'
 data_root = 'data/bdd/'

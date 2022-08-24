@@ -178,3 +178,6 @@ We provide scripts to inference and output videos. You can use the following com
 ```shell
 python tools/inference.py ${CONFIG_FILE} --input ${INPUT_FILE_OR_FOLDER} --output ${OUTPUT_FILE_OR_FOLDER} --checkpoint ${CHECKPOINT_FILE} --fps ${FPS}
 ```
+
+### Use versetail detectors
+You can directly replace the config of `detector` in QDTrack by any detector in MMDetection.

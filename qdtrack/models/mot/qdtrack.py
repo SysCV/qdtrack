@@ -3,14 +3,20 @@ from mmdet.core import bbox2result
 from mmdet.models import build_detector, build_head
 from mmdet.models.detectors.base import BaseDetector
 
-from qdtrack.core import track2result
+from qdtrack.core import imshow_tracks, restore_result, track2result
 from ..builder import MODELS, build_tracker
-from qdtrack.core import imshow_tracks, restore_result
 
 
 @MODELS.register_module()
 class QDTrack(BaseDetector):
-    def __init__(self, detector=None, track_head=None, tracker=None, freeze_detector=False, *args, **kwargs):
+
+    def __init__(self,
+                 detector=None,
+                 track_head=None,
+                 tracker=None,
+                 freeze_detector=False,
+                 *args,
+                 **kwargs):
         super().__init__()
         self.tracker_cfg = tracker
 
@@ -135,14 +141,19 @@ class QDTrack(BaseDetector):
         # TODO inherit from a base tracker
         assert self.with_track_head, 'Track head must be implemented.'
         frame_id = img_metas[0].get('frame_id', -1)
-        if frame_id == 0 and hasattr(self,'tracker') is False: # for param search
+        if frame_id == 0 and hasattr(self,
+                                     'tracker') is False:  # for param search
             self.init_tracker()
 
         x = self.detector.extract_feat(img)
         proposal_list = self.detector.rpn_head.simple_test_rpn(x, img_metas)
 
         det_bboxes, det_labels = self.detector.roi_head.simple_test_bboxes(
-            x, img_metas, proposal_list, self.detector.roi_head.test_cfg, rescale=rescale)
+            x,
+            img_metas,
+            proposal_list,
+            self.detector.roi_head.test_cfg,
+            rescale=rescale)
 
         det_bboxes = det_bboxes[0]
         det_labels = det_labels[0]
@@ -161,8 +172,9 @@ class QDTrack(BaseDetector):
                                   self.detector.roi_head.bbox_head.num_classes)
 
         if track_feats is not None:
-            track_result = track2result(bboxes, labels, ids,
-                                        self.detector.roi_head.bbox_head.num_classes)
+            track_result = track2result(
+                bboxes, labels, ids,
+                self.detector.roi_head.bbox_head.num_classes)
         else:
             track_result = [
                 np.zeros((0, 6), dtype=np.float32)
