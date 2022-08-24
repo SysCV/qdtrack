@@ -1,7 +1,7 @@
-from .formatting import VideoCollect, SeqCollect, SeqDefaultFormatBundle
+from .formatting import SeqCollect, SeqDefaultFormatBundle, VideoCollect
 from .loading import LoadMultiImagesFromFile, SeqLoadAnnotations
-from .transforms import (SeqNormalize, SeqPad, SeqRandomFlip, SeqResize,
-                         SeqPhotoMetricDistortion, SeqRandomCrop)
+from .transforms import (SeqNormalize, SeqPad, SeqPhotoMetricDistortion,
+                         SeqRandomCrop, SeqRandomFlip, SeqResize)
 
 __all__ = [
     'LoadMultiImagesFromFile', 'SeqLoadAnnotations', 'SeqResize',

@@ -8,8 +8,8 @@
 - CUDA 9.2+ (If you build PyTorch from source, CUDA 9.0 is also compatible)
 - NCCL 2+
 - GCC 5+
-- [mmcv](https://github.com/open-mmlab/mmcv)
-- [mmdetection](https://github.com/open-mmlab/mmdetection)
+- [mmcv](https://github.com/open-mmlab/mmcv) = 1.6.1
+- [mmdetection](https://github.com/open-mmlab/mmdetection) = 2.25.1
 
 ### Install QDTrack
 
@@ -31,8 +31,8 @@ You can check the supported CUDA version for precompiled packages on the [PyTorc
 c. Install mmcv and mmdetection.
 
 ```shell
-pip install mmcv-full==1.3.10
-pip install mmdet==2.14.0
+pip install mmcv-full==1.6.1
+pip install mmdet==2.25.1
 ```
 
 You can also refer to the [offical instructions](https://github.com/open-mmlab/mmdetection/blob/master/docs/install.md).

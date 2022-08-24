@@ -10,11 +10,8 @@ import torch.distributed as dist
 from mmcv.runner import get_dist_info
 
 
-def single_gpu_test(model,
-                    data_loader,
-                    show=False,
-                    out_dir=None,
-                    show_score_thr=0.3):
+def single_gpu_test(model, data_loader, show=False):
+    # add args `show` to make it consitent with `single_gpu_test` in `eval_hook`
     model.eval()
     results = defaultdict(list)
     dataset = data_loader.dataset
@@ -24,10 +21,6 @@ def single_gpu_test(model,
             result = model(return_loss=False, rescale=True, **data)
         for k, v in result.items():
             results[k].append(v)
-
-        if show or out_dir:
-            pass  # TODO
-
         batch_size = data['img'][0].size(0)
         for _ in range(batch_size):
             prog_bar.update()

@@ -1,6 +1,7 @@
+import random
+
 import mmcv
 import numpy as np
-import random
 from mmdet.datasets import DATASETS, CocoDataset
 
 from ..core import eval_mot

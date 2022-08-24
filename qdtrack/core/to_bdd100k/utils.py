@@ -1,10 +1,10 @@
 import os
 import os.path as osp
 from functools import partial
-
-import pycocotools.mask as mask_utils
-import numpy as np
 from multiprocessing import Pool
+
+import numpy as np
+import pycocotools.mask as mask_utils
 from PIL import Image
 from tqdm import tqdm
 

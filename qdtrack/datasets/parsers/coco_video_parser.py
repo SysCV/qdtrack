@@ -1,7 +1,9 @@
-import numpy as np
 from collections import defaultdict
-from .coco_api import COCO
+
+import numpy as np
 from pycocotools.coco import _isArrayLike
+
+from .coco_api import COCO
 
 
 class CocoVID(COCO):

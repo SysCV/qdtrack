@@ -1,19 +1,30 @@
 import numpy as np
 from mmdet.core import bbox2result
-from mmdet.models import TwoStageDetector
+from mmdet.models import build_detector, build_head
+from mmdet.models.detectors.base import BaseDetector
 
-from qdtrack.core import track2result
+from qdtrack.core import imshow_tracks, restore_result, track2result
 from ..builder import MODELS, build_tracker
-from qdtrack.core import imshow_tracks, restore_result
 
 
 @MODELS.register_module()
-class QDTrack(TwoStageDetector):
+class QDTrack(BaseDetector):
 
-    def __init__(self, tracker=None, freeze_detector=False, *args, **kwargs):
-        self.prepare_cfg(kwargs)
-        super().__init__(*args, **kwargs)
+    def __init__(self,
+                 detector=None,
+                 track_head=None,
+                 tracker=None,
+                 freeze_detector=False,
+                 *args,
+                 **kwargs):
+        super().__init__()
         self.tracker_cfg = tracker
+
+        if detector is not None:
+            self.detector = build_detector(detector)
+
+        if track_head is not None:
+            self.track_head = build_head(track_head)
 
         self.freeze_detector = freeze_detector
         if self.freeze_detector:
@@ -29,13 +40,13 @@ class QDTrack(TwoStageDetector):
             for param in model.parameters():
                 param.requires_grad = False
 
-    def prepare_cfg(self, kwargs):
-        if kwargs.get('train_cfg', False):
-            kwargs['roi_head']['track_train_cfg'] = kwargs['train_cfg'].get(
-                'embed', None)
-
     def init_tracker(self):
         self.tracker = build_tracker(self.tracker_cfg)
+
+    @property
+    def with_track_head(self):
+        """bool: whether the framework has a track_head."""
+        return hasattr(self, 'track_head') and self.track_head is not None
 
     def forward_train(self,
                       img,
@@ -47,50 +58,108 @@ class QDTrack(TwoStageDetector):
                       ref_img_metas,
                       ref_gt_bboxes,
                       ref_gt_labels,
-                      ref_gt_match_indices,
                       gt_bboxes_ignore=None,
                       gt_masks=None,
                       ref_gt_bboxes_ignore=None,
                       ref_gt_masks=None,
                       **kwargs):
-        x = self.extract_feat(img)
+        """Forward function during training.
+
+         Args:
+            img (Tensor): of shape (N, C, H, W) encoding input images.
+                Typically these should be mean centered and std scaled.
+            img_metas (list[dict]): list of image info dict where each dict
+                has: 'img_shape', 'scale_factor', 'flip', and may also contain
+                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
+            gt_bboxes (list[Tensor]): Ground truth bboxes of the image,
+                each item has a shape (num_gts, 4).
+            gt_labels (list[Tensor]): Ground truth labels of all images.
+                each has a shape (num_gts,).
+            gt_match_indices (list(Tensor)): Mapping from gt_instance_ids to
+                ref_gt_instance_ids of the same tracklet in a pair of images.
+            ref_img (Tensor): of shape (N, C, H, W) encoding input reference
+                images. Typically these should be mean centered and std scaled.
+            ref_img_metas (list[dict]): list of reference image info dict where
+                each dict has: 'img_shape', 'scale_factor', 'flip', and may
+                also contain 'filename', 'ori_shape', 'pad_shape',
+                and 'img_norm_cfg'.
+            ref_gt_bboxes (list[Tensor]): Ground truth bboxes of the
+                reference image, each item has a shape (num_gts, 4).
+            ref_gt_labels (list[Tensor]): Ground truth labels of all
+                reference images, each has a shape (num_gts,).
+            gt_masks (list[Tensor]) : Masks for each bbox, has a shape
+                (num_gts, h , w).
+            gt_bboxes_ignore (list[Tensor], None): Ground truth bboxes to be
+                ignored, each item has a shape (num_ignored_gts, 4).
+            ref_gt_bboxes_ignore (list[Tensor], None): Ground truth bboxes
+                of reference images to be ignored,
+                each item has a shape (num_ignored_gts, 4).
+            ref_gt_masks (list[Tensor]) : Masks for each reference bbox,
+                has a shape (num_gts, h , w).
+
+        Returns:
+            dict[str : Tensor]: All losses.
+        """
+        x = self.detector.extract_feat(img)
 
         losses = dict()
 
         # RPN forward and loss
-        proposal_cfg = self.train_cfg.get('rpn_proposal', self.test_cfg.rpn)
-        rpn_losses, proposal_list = self.rpn_head.forward_train(
-            x,
-            img_metas,
-            gt_bboxes,
-            gt_labels=None,
-            gt_bboxes_ignore=gt_bboxes_ignore,
-            proposal_cfg=proposal_cfg)
-        losses.update(rpn_losses)
+        if self.detector.with_rpn:
+            proposal_cfg = self.detector.train_cfg.get(
+                'rpn_proposal', self.detector.test_cfg.rpn)
+            rpn_losses, proposal_list = self.detector.rpn_head.forward_train(
+                x,
+                img_metas,
+                gt_bboxes,
+                gt_labels=None,
+                gt_bboxes_ignore=gt_bboxes_ignore,
+                proposal_cfg=proposal_cfg)
+            losses.update(rpn_losses)
 
-        ref_x = self.extract_feat(ref_img)
-        ref_proposals = self.rpn_head.simple_test_rpn(ref_x, ref_img_metas)
+        roi_losses = self.detector.roi_head.forward_train(
+            x, img_metas, proposal_list, gt_bboxes, gt_labels,
+            gt_bboxes_ignore, gt_masks, **kwargs)
 
-        roi_losses = self.roi_head.forward_train(
+        losses.update(roi_losses)
+
+        ref_x = self.detector.extract_feat(ref_img)
+        ref_proposals = self.detector.rpn_head.simple_test_rpn(
+            ref_x, ref_img_metas)
+
+        track_losses = self.track_head.forward_train(
             x, img_metas, proposal_list, gt_bboxes, gt_labels,
             gt_match_indices, ref_x, ref_img_metas, ref_proposals,
             ref_gt_bboxes, ref_gt_labels, gt_bboxes_ignore, gt_masks,
-            ref_gt_bboxes_ignore, **kwargs)
-        losses.update(roi_losses)
+            ref_gt_bboxes_ignore)
+
+        losses.update(track_losses)
 
         return losses
 
     def simple_test(self, img, img_metas, rescale=False):
         # TODO inherit from a base tracker
-        assert self.roi_head.with_track, 'Track head must be implemented.'
+        assert self.with_track_head, 'Track head must be implemented.'
         frame_id = img_metas[0].get('frame_id', -1)
-        if frame_id == 0:
+        if frame_id == 0 and hasattr(self,
+                                     'tracker') is False:  # for param search
             self.init_tracker()
 
-        x = self.extract_feat(img)
-        proposal_list = self.rpn_head.simple_test_rpn(x, img_metas)
-        det_bboxes, det_labels, track_feats = self.roi_head.simple_test(
-            x, img_metas, proposal_list, rescale)
+        x = self.detector.extract_feat(img)
+        proposal_list = self.detector.rpn_head.simple_test_rpn(x, img_metas)
+
+        det_bboxes, det_labels = self.detector.roi_head.simple_test_bboxes(
+            x,
+            img_metas,
+            proposal_list,
+            self.detector.roi_head.test_cfg,
+            rescale=rescale)
+
+        det_bboxes = det_bboxes[0]
+        det_labels = det_labels[0]
+
+        track_feats = self.track_head.extract_bbox_feats(
+            x, det_bboxes, img_metas)
 
         if track_feats is not None:
             bboxes, labels, ids = self.tracker.match(
@@ -100,15 +169,16 @@ class QDTrack(TwoStageDetector):
                 frame_id=frame_id)
 
         bbox_result = bbox2result(det_bboxes, det_labels,
-                                  self.roi_head.bbox_head.num_classes)
+                                  self.detector.roi_head.bbox_head.num_classes)
 
         if track_feats is not None:
-            track_result = track2result(bboxes, labels, ids,
-                                        self.roi_head.bbox_head.num_classes)
+            track_result = track2result(
+                bboxes, labels, ids,
+                self.detector.roi_head.bbox_head.num_classes)
         else:
             track_result = [
                 np.zeros((0, 6), dtype=np.float32)
-                for i in range(self.roi_head.bbox_head.num_classes)
+                for i in range(self.detector.roi_head.bbox_head.num_classes)
             ]
         return dict(bbox_results=bbox_result, track_results=track_result)
 
@@ -159,3 +229,9 @@ class QDTrack(TwoStageDetector):
             wait_time=wait_time,
             backend=backend)
         return img
+
+    def extract_feat(self, imgs):
+        return super().extract_feat(imgs)
+
+    def aug_test(self, imgs, img_metas, **kwargs):
+        return super().aug_test(imgs, img_metas, **kwargs)

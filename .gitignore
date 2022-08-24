@@ -121,3 +121,4 @@ work_dirs/
 *.py~
 *.sh~
 ckpts
+videos

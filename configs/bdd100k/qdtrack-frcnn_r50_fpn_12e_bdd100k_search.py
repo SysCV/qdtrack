@@ -18,8 +18,8 @@ model = dict(
                     num_bins=3)))),
     tracker=dict(
         type='QuasiDenseEmbedTracker',
-        init_score_thr=0.7,
-        obj_score_thr=0.3,
+        init_score_thr=[0.9],
+        obj_score_thr=[0.3, 0.4],
         match_score_thr=0.5,
         memo_tracklet_frames=10,
         memo_backdrop_frames=1,
@@ -121,3 +121,4 @@ load_from = None
 resume_from = None
 workflow = [('train', 1)]
 evaluation = dict(metric=['bbox', 'track'], interval=2)
+search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDSw', 'MT', 'ML']

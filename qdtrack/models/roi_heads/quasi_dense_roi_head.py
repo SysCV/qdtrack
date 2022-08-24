@@ -1,11 +1,11 @@
 import torch
+from mmcv.runner import BaseModule
 from mmdet.core import bbox2roi, build_assigner, build_sampler
 from mmdet.models import HEADS, build_head, build_roi_extractor
-from mmdet.models.roi_heads import StandardRoIHead
 
 
 @HEADS.register_module()
-class QuasiDenseRoIHead(StandardRoIHead):
+class QuasiDenseRoIHead(BaseModule):
 
     def __init__(self,
                  track_roi_extractor=None,
@@ -77,9 +77,6 @@ class QuasiDenseRoIHead(StandardRoIHead):
                       ref_gt_bboxes_ignore=None,
                       *args,
                       **kwargs):
-        losses = super().forward_train(x, img_metas, proposal_list, gt_bboxes,
-                                       gt_labels, gt_bboxes_ignore, gt_masks,
-                                       *args, **kwargs)
         if self.with_track:
             num_imgs = len(img_metas)
             if gt_bboxes_ignore is None:
@@ -100,8 +97,8 @@ class QuasiDenseRoIHead(StandardRoIHead):
                 key_sampling_results.append(sampling_result)
 
                 ref_assign_result = self.track_roi_assigner.assign(
-                    ref_proposals[i], ref_gt_bboxes[i], ref_gt_bboxes_ignore[i],
-                    ref_gt_labels[i])
+                    ref_proposals[i], ref_gt_bboxes[i],
+                    ref_gt_bboxes_ignore[i], ref_gt_labels[i])
                 ref_sampling_result = self.track_roi_sampler.sample(
                     ref_assign_result,
                     ref_proposals[i],
@@ -122,9 +119,7 @@ class QuasiDenseRoIHead(StandardRoIHead):
                 gt_match_indices, key_sampling_results, ref_sampling_results)
             loss_track = self.track_head.loss(*match_feats, *asso_targets)
 
-            losses.update(loss_track)
-
-        return losses
+        return loss_track
 
     def _track_forward(self, x, bboxes):
         """Track head forward function used in both training and testing."""
@@ -134,19 +129,13 @@ class QuasiDenseRoIHead(StandardRoIHead):
         track_feats = self.track_head(track_feats)
         return track_feats
 
-    def simple_test(self, x, img_metas, proposal_list, rescale):
-        det_bboxes, det_labels = self.simple_test_bboxes(
-            x, img_metas, proposal_list, self.test_cfg, rescale=rescale)
-
-        # TODO: support batch inference
-        det_bboxes = det_bboxes[0]
-        det_labels = det_labels[0]
+    def extract_bbox_feats(self, x, det_bboxes, img_metas):
 
         if det_bboxes.size(0) == 0:
-            return det_bboxes, det_labels, None
+            return None
 
         track_bboxes = det_bboxes[:, :-1] * torch.tensor(
             img_metas[0]['scale_factor']).to(det_bboxes.device)
         track_feats = self._track_forward(x, [track_bboxes])
 
-        return det_bboxes, det_labels, track_feats
+        return track_feats

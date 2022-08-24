@@ -1,7 +1,7 @@
 # Getting Started
 This page provides basic tutorials about the usage of QDTrack. For installation instructions, please see [INSTALL.md](INSTALL.md).
 
-This document is based on BDD100K dataset. For usages on the other datasets, please refer to [TAO](../configs/tao/README.md).
+This document is based on BDD100K dataset. For usages on the other datasets, please refer to [TAO](../configs/tao/README.md) or [MOT17](../configs/mot17/README.md).
 ## Prepare Datasets
 
 #### Download BDD100K
@@ -23,7 +23,10 @@ After downloaded the annotations, please transform the offical annotation files 
 
 First, uncompress the downloaded annotation file and you will obtain a folder named `bdd100k`.
 
+Run `pip install git+https://github.com/bdd100k/bdd100k.git` to install the lastest bdd100k toolkit. 
+
 To convert the detection set, you can do as
+
 ```bash
 mkdir data/bdd/labels/det_20
 python -m bdd100k.label.to_coco -m det -i bdd100k/labels/det_20/det_${SET_NAME}.json -o data/bdd/labels/det_20/det_${SET_NAME}_cocofmt.json
@@ -96,6 +99,7 @@ Optional arguments are:
 
 - `resume-from` loads both the model weights and optimizer status, and the epoch is also inherited from the specified checkpoint. It is usually used for resuming the training process that is interrupted accidentally.
 - For more clear usage, the original `load-from` is deprecated and you can use `--cfg-options 'load_from="path/to/you/model"'` instead. It only loads the model weights and the training epoch starts from 0 which is usually used for finetuning.
+- `qdtrack` now supports changing detectors.
 
 
 #### Launch multiple jobs on a single machine
@@ -155,3 +159,25 @@ Optional arguments:
 - `TASK_NAME`: Task names in one of [`det`, `ins_seg`, `box_track`, `seg_track`]
 - `BDD_OUPPUT_DIR`: The dir path to save the converted bdd jsons and masks.
 - `COCO_PRED_FILE`: Filename of the json in coco submission format.
+
+### Search parameters for the tracker
+
+We provide scripts to search parameters for the tracker to reach better performance. You can use the following commands to search parameters.
+
+```shell
+sh tools/dist_test_search.sh ${CONFIG_FILE} ${CHECKPOINT_FILE} ${GPU_NUM}
+```
+
+You can follow the example of `configs/bdd100k/qdtrack-frcnn_r50_fpn_12e_bdd100k_search.py` to configure you searching settings.
+
+
+### Inference
+
+We provide scripts to inference and output videos. You can use the following commands to do that.
+
+```shell
+python tools/inference.py ${CONFIG_FILE} --input ${INPUT_FILE_OR_FOLDER} --output ${OUTPUT_FILE_OR_FOLDER} --checkpoint ${CHECKPOINT_FILE} --fps ${FPS}
+```
+
+### Use versetail detectors
+You can directly replace the config of `detector` in QDTrack by any detector in MMDetection.

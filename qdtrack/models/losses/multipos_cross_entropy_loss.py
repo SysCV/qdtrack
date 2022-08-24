@@ -27,9 +27,9 @@ def multi_pos_cross_entropy(pred,
     _pos_expand = torch.repeat_interleave(pred_pos, pred.shape[1], dim=1)
     _neg_expand = pred_neg.repeat(1, pred.shape[1])
 
-    x = torch.nn.functional.pad((_neg_expand - _pos_expand), (0, 1), "constant", 0)
+    x = torch.nn.functional.pad((_neg_expand - _pos_expand), (0, 1),
+                                "constant", 0)
     loss = torch.logsumexp(x, dim=1)
-
 
     # apply weights and do the reduction
     if weight is not None:

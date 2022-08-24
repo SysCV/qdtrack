@@ -3,13 +3,12 @@ import tempfile
 
 import mmcv
 import numpy as np
+from lvis import LVIS, LVISEval, LVISResults
 from mmcv.utils import print_log
 from mmdet.datasets import DATASETS
-from .parsers import COCO
 
 from .coco_video_dataset import CocoVideoDataset
-from .parsers import CocoVID
-from lvis import LVIS, LVISResults, LVISEval
+from .parsers import COCO, CocoVID
 
 
 @DATASETS.register_module()
