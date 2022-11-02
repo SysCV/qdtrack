@@ -3,6 +3,12 @@
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/quasi-dense-instance-similarity-learning/multiple-object-tracking-on-bdd100k)](https://paperswithcode.com/sota/multiple-object-tracking-on-bdd100k?p=quasi-dense-instance-similarity-learning)
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/quasi-dense-instance-similarity-learning/multiple-object-tracking-on-waymo-open)](https://paperswithcode.com/sota/multiple-object-tracking-on-waymo-open?p=quasi-dense-instance-similarity-learning)
 
+## News
+We released a new version of our paper **with new benchmark results** setting a new SOTA on BDD100K!
+
+[QDTrack: Quasi-Dense Similarity Learning for Appearance-Only Multiple Object Tracking](https://arxiv.org/abs/2210.06984)
+
+##
 This is the offical implementation of paper [Quasi-Dense Similarity Learning for Multiple Object Tracking](https://arxiv.org/abs/2006.06664).
 
 We present a [trailer](https://youtu.be/o8HRJAOZidc) that consists of method illustrations and tracking visualizations. Our project website contains more information: [vis.xyz/pub/qdtrack](https://www.vis.xyz/pub/qdtrack/).
@@ -74,7 +80,14 @@ Waymo models won't be available publicly due to the dataset license constraints.
 ## Citation
 
 ```
-@InProceedings{qdtrack,
+@article{qdtrack,
+  title={QDTrack: Quasi-Dense Similarity Learning for Appearance-Only Multiple Object Tracking},
+  author={Fischer, Tobias and Pang, Jiangmiao and Huang, Thomas E and Qiu, Linlu and Chen, Haofeng and Darrell, Trevor and Yu, Fisher},
+  journal={arXiv preprint arXiv:2210.06984},
+  year={2022}
+}
+
+@InProceedings{qdtrack_conf,
   title = {Quasi-Dense Similarity Learning for Multiple Object Tracking},
   author = {Pang, Jiangmiao and Qiu, Linlu and Li, Xia and Chen, Haofeng and Li, Qi and Darrell, Trevor and Yu, Fisher},
   booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition},
