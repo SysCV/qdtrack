@@ -29,16 +29,16 @@ Without bells and whistles, our method outperforms the states of the art on MOT,
 
 ### BDD100K test set
 
-| mMOTA | mIDF1  | ID Sw. |
-|-------|--------|--------|
-| 35.5  | 52.3   |  10790 |
+| mMOTA | mIDF1  | 
+|-------|--------|
+| 42.4  |  55.6  | 
 
-### MOT
+### MOTChallenge
 
-| Dataset | MOTA | IDF1  | ID Sw. | MT | ML |
-|-------|--------|--------| ----| ---| ---|
-| MOT16 | 69.8 | 67.1 | 1097 | 316 | 150 |
-| MOT17 | 68.7 | 66.3 | 3378 | 957 | 516 |
+| Dataset | MOTA | IDF1  | HOTA |
+|-------|--------|--------| ----|
+| MOT17 | 78.7 | 77.5 | 63.5 |
+| MOT20 | 74.7 | 73.8 | 60.0 |
 
 ### Waymo validation set
 
@@ -57,6 +57,12 @@ Without bells and whistles, our method outperforms the states of the art on MOT,
 | test    | 12.4 | 4.5  | 5.2|
 
 
+### DanceTrack
+
+| Dataset | MOTA | IDF1  | HOTA |
+|-------|--------|--------| ----|
+| test set | 87.7 | 50.4 | 54.2 |
+
 ## Installation
 
 Please refer to [INSTALL.md](docs/INSTALL.md) for installation instructions.
@@ -70,9 +76,7 @@ Trained models for testing
 - [BDD100K model](https://drive.google.com/file/d/1YNAQgd8rMqqEG-fRj3VWlO4G5kdwJbxz/view?usp=sharing)
 - [TAO model](https://drive.google.com/file/d/1JtZ9UA0-b9LDor1NHtk8A-g83X7-T89X/view?usp=sharing)
 
-More implementations / models on the following benchmarks will be released later
-
-- MOT16 / MOT17 / MOT20
+We will soon release models for the updated results. Stay tuned!
 
 Waymo models won't be available publicly due to the dataset license constraints.
 
